@@ -9,7 +9,7 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 const corsOptions = {
-  origin: 'https://veltech-mentoring-portal.vercel.app'
+  origin: ['https://veltech-mentoring-portal.vercel.app', 'http://localhost:3000']
 };
 
 app.use(cors(corsOptions));
@@ -32,7 +32,8 @@ app.use('/api/activity-logs', activityLogRoutes);
 const connectDB = async () => {
   try {
     const dbUrl = process.env.DATABASE_URL;
-    await mongoose.connect(dbUrl);
+    // family: 4 forces IPv4, bypassing the known Render/Node issue with DNS SRV lookups (ENOTFOUND)
+    await mongoose.connect(dbUrl, { family: 4 });
     console.log('✅ MongoDB connected successfully!');
   } catch (error) {
     console.error('❌ Error connecting to MongoDB:', error.message);

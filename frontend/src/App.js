@@ -12,7 +12,7 @@ import ManageHodsPage from './pages/ManageHodsPage.js';
 
 function App() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-slate-100">
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
       <Router>
         <Routes>
           <Route path="/" element={<LoginPage />} />
