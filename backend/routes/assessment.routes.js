@@ -15,7 +15,7 @@ router.post('/', protect, async (req, res) => {
     if (!student) {
       return res.status(404).json({ message: 'Student not found.' })
     }
-    if (!student.currentMentor.equals(mentorId)) {
+    if (req.user.role !== 'hod' && !student.currentMentor.equals(mentorId)) {
       return res.status(403).json({ message: 'You are not authorized to edit this student.' })
     }
 
