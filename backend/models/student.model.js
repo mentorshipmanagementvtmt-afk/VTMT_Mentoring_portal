@@ -66,7 +66,7 @@ const studentSchema = new Schema(
     currentMentor: {
       type: Schema.Types.ObjectId,
       ref: 'User',
-      required: true
+      required: false
     },
 
     firstYearMentor: {
@@ -118,6 +118,11 @@ const studentSchema = new Schema(
       past: String,
       present: String,
       features: String
+    },
+
+    profileImage: {
+      url: { type: String },
+      publicId: { type: String }
     }
   },
   { timestamps: true }

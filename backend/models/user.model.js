@@ -39,8 +39,13 @@ const userSchema = new Schema({
     role: {
         type: String,
         required: true,
-        enum: ['mentor', 'hod'], // Can only be 'mentor' or 'hod'
+        enum: ['mentor', 'hod', 'admin'], 
         default: 'mentor'
+    },
+
+    profileImage: {
+        url: { type: String },
+        publicId: { type: String }
     }
 
 }, { timestamps: true }); // Automatically adds 'createdAt' and 'updatedAt' fields

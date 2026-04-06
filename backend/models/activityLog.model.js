@@ -43,7 +43,11 @@ const activityLogSchema = new Schema(
         'Industrial Visit',
         'Inplant Training',
         'Culturals',
-        'Sports'
+        'Sports',
+        'NPTEL Program',
+        'External Event',
+        'Internal Event',
+        'Major Certification'
       ],
       required: true
     },
@@ -69,6 +73,11 @@ const activityLogSchema = new Schema(
     studentName: {
       type: String,
       default: ''
+    },
+
+    score: {
+      type: Number,
+      default: 0
     }
   },
   { timestamps: true }
@@ -96,15 +105,42 @@ activityLogSchema.pre('save', async function (next) {
       'Mini Project',
       'Workshop',
       'Industrial Visit',
-      'Inplant Training'
+      'Inplant Training',
+      'NPTEL Program',
+      'Major Certification'
     ];
 
-    const extraCurricular = ['Culturals', 'Sports'];
+    const extraCurricular = ['Culturals', 'Sports', 'External Event', 'Internal Event'];
 
     if (coCurricular.includes(this.category)) {
       this.categoryGroup = 'Co-Curricular';
     } else if (extraCurricular.includes(this.category)) {
       this.categoryGroup = 'Extra-Curricular';
+    }
+
+    // Assign Score based on category
+    const pointValues = {
+      'Patent': 100,
+      'Journal Publication': 75,
+      'NPTEL Program': 50,
+      'Conference': 50,
+      'Major Certification': 40,
+      'External Event': 20,
+      'Workshop': 20,
+      'Book Publication': 20,
+      'Research Proposal': 20,
+      'Mini Project': 20,
+      'Internal Event': 10,
+      'Culturals': 10,
+      'Sports': 10,
+      'Industrial Visit': 10,
+      'Inplant Training': 10
+    };
+
+    if (this.category && pointValues[this.category]) {
+      this.score = pointValues[this.category];
+    } else {
+      this.score = 0; // Default fallback
     }
 
     // Auto-increment slNo per semester

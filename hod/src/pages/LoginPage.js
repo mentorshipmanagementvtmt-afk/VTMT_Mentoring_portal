@@ -1,0 +1,116 @@
+// src/pages/LoginPage.js
+import React, { useState } from 'react';
+import { toast } from 'react-toastify';
+import api from 'api';
+import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { Typography, Form, Input, Button, Card } from 'antd';
+import { UserOutlined, LockOutlined } from '@ant-design/icons';
+
+const { Title, Text } = Typography;
+
+function LoginPage() {
+  const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogin = async (values) => {
+    setLoading(true);
+    try {
+      const response = await api.post('/users/login', values);
+      if (response.data.user.role !== 'hod') {
+        throw new Error('Access Denied: You are not authorized for the HOD Portal.');
+      }
+      login(response.data);
+      toast.success('HOD Login successful!');
+      navigate('/dashboard');
+    } catch (err) {
+      const msg = err?.response?.data?.message || 'Login failed. Please try again.';
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <main role="main" aria-label="Login Page" style={{
+      minHeight: '100vh',
+      display: 'grid',
+      placeItems: 'center',
+      background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
+      padding: '24px'
+    }}>
+      <Card
+        style={{
+          width: '100%',
+          maxWidth: '440px',
+          borderRadius: '16px',
+          boxShadow: '0 20px 40px -10px rgba(139, 92, 246, 0.15), 0 10px 20px -5px rgba(139, 92, 246, 0.1)'
+        }}
+        variant="borderless"
+      >
+        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+          <Title level={3} style={{ color: '#581c87', margin: 0, fontWeight: 700 }}>
+            HOD Management Portal
+          </Title>
+          <Text type="secondary" style={{ color: '#7e22ce' }}>
+            Enter your HOD credentials to access the dashboard.
+          </Text>
+        </div>
+
+        <Form
+          name="login_form"
+          layout="vertical"
+          onFinish={handleLogin}
+          size="large"
+        >
+          <Form.Item
+            name="email"
+            rules={[
+              { required: true, message: 'Please input your Email!' },
+              { type: 'email', message: 'Please enter a valid email!' }
+            ]}
+          >
+            <Input 
+              prefix={<UserOutlined style={{ color: '#94a3b8' }} />} 
+              placeholder="you@example.com" 
+              style={{ borderRadius: '8px' }}
+            />
+          </Form.Item>
+
+          <Form.Item
+            name="password"
+            rules={[{ required: true, message: 'Please input your Password!' }]}
+          >
+            <Input.Password 
+              prefix={<LockOutlined style={{ color: '#94a3b8' }} />} 
+              placeholder="••••••••" 
+              style={{ borderRadius: '8px' }}
+            />
+          </Form.Item>
+
+          <Form.Item style={{ marginTop: '32px', marginBottom: 0 }}>
+            <Button 
+              type="primary" 
+              htmlType="submit" 
+              loading={loading}
+              block 
+              style={{ 
+                height: '46px', 
+                borderRadius: '8px', 
+                background: '#8b5cf6', 
+                borderColor: '#8b5cf6',
+                fontWeight: 600,
+                fontSize: '16px'
+              }}
+            >
+              Sign in as HOD
+            </Button>
+          </Form.Item>
+        </Form>
+      </Card>
+    </main>
+  );
+}
+
+export default LoginPage;

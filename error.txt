@@ -1,0 +1,57 @@
+﻿node : C:\Users\RANJITH\One
+Drive\Documents\Desktop\vel
+tech-mentoring-portal\scrip
+ts\build_student_activities
+.cjs:206
+At line:1 char:1
++ node scripts/build_studen
+t_activities.cjs 2>&1 | 
+Out-File error.txt - ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo         
+     : NotSpecified: (C:\  
+  Users\RANJIT...ivities   
+ .cjs:206:String) [], R    
+emoteException
+    + FullyQualifiedErrorI 
+   d : NativeCommandError
+ 
+  
+console.log(\`Successfully 
+generated files for 
+\${portal}\`);
+              ^
+
+SyntaxError: Invalid or 
+unexpected token
+    at wrapSafe (node:inter
+nal/modules/cjs/loader:1638
+:18)
+    at Module._compile (nod
+e:internal/modules/cjs/load
+er:1680:20)
+    at Object..js (node:int
+ernal/modules/cjs/loader:18
+39:10)
+    at Module.load (node:in
+ternal/modules/cjs/loader:1
+441:32)
+    at Function._load (node
+:internal/modules/cjs/loade
+r:1263:12)
+    at 
+TracingChannel.traceSync (n
+ode:diagnostics_channel:322
+:14)
+    at wrapModuleLoad (node
+:internal/modules/cjs/loade
+r:237:24)
+    at Function.executeUser
+EntryPoint [as runMain] (no
+de:internal/modules/run_mai
+n:171:5)
+    at node:internal/main/r
+un_main_module:36:49
+
+Node.js v22.20.0

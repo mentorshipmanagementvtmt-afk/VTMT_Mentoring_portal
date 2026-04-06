@@ -8,12 +8,15 @@ const Intervention = require('../models/intervention.model.js');
 const AcademicLog = require('../models/academicLog.model.js');
 const ActivityLog = require('../models/activityLog.model.js');
 
-const { protect, isHod } = require('../middleware/auth.middleware.js');
+const { protect, isHod, isAdminOrHod } = require('../middleware/auth.middleware.js');
+const upload = require('../middleware/upload.middleware.js');
+const { uploadImage, deleteImage } = require('../utils/cloudinary.js');
+
 
 // -----------------------------------------------------------
 // ROUTE 1: Create a new student (HOD ONLY)
 // -----------------------------------------------------------
-router.post('/', protect, isHod, async (req, res) => {
+router.post('/', protect, isAdminOrHod, upload.single('profileImage'), async (req, res) => {
   try {
     const {
       name,
@@ -32,7 +35,8 @@ router.post('/', protect, isHod, async (req, res) => {
       achievements
     } = req.body;
 
-    const department = req.user.department;
+    const department = req.user.role === 'admin' ? req.body.department : req.user.department;
+    if (!department) return res.status(400).json({ message: 'Department is required.' });
 
     const mentor = await User.findOne({ mtsNumber: mentorMtsNumber });
     if (!mentor) {
@@ -40,6 +44,16 @@ router.post('/', protect, isHod, async (req, res) => {
         .status(404)
         .json({ message: `Mentor with MTS Number ${mentorMtsNumber} not found.` });
     }
+
+    let profileImage = { url: '', publicId: '' };
+    if (req.file) {
+      const result = await uploadImage(req.file.buffer);
+      profileImage = { url: result.secure_url, publicId: result.public_id };
+    }
+
+    // Since nested objects like 'personal' come as JSON string when using FormData, we might need to parse them.
+    // Assuming the frontend will parse or send JSON.stringify for objects if it's formData.
+    const parseIfString = (val) => typeof val === 'string' ? JSON.parse(val) : val;
 
     const newStudent = new Student({
       name,
@@ -50,13 +64,14 @@ router.post('/', protect, isHod, async (req, res) => {
       section,
       semester,
       currentMentor: mentor._id,
-      personal: personal || {},
-      parents: parents || {},
-      addresses: addresses || {},
-      contact: contact || {},
-      academics: academics || {},
-      health: health || {},
-      achievements: achievements || {}
+      personal: personal ? parseIfString(personal) : {},
+      parents: parents ? parseIfString(parents) : {},
+      addresses: addresses ? parseIfString(addresses) : {},
+      contact: contact ? parseIfString(contact) : {},
+      academics: academics ? parseIfString(academics) : {},
+      health: health ? parseIfString(health) : {},
+      achievements: achievements ? parseIfString(achievements) : {},
+      profileImage
     });
 
     const savedStudent = await newStudent.save();
@@ -72,13 +87,43 @@ router.post('/', protect, isHod, async (req, res) => {
 });
 
 // -----------------------------------------------------------
+// ROUTE 1.5: Get all students with optional filters (Admin/HOD)
+// -----------------------------------------------------------
+router.get('/', protect, isAdminOrHod, async (req, res) => {
+  try {
+    const { department, batch, section } = req.query;
+    const user = req.user;
+    
+    let filter = {};
+    
+    // Role-based restrictions
+    if (user.role === 'hod') {
+      filter.department = user.department;
+    } else if (user.role === 'admin' && department) {
+      filter.department = department; // Admin can filter by any requested department
+    }
+    
+    if (batch) filter.batch = batch;
+    if (section) filter.section = section;
+
+    const students = await Student.find(filter)
+      .select('name registerNumber vmNumber department batch section currentMentor')
+      .populate('currentMentor', 'name mtsNumber');
+      
+    res.status(200).json(students);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error fetching students', error: error.message });
+  }
+});
+
+// -----------------------------------------------------------
 // ROUTE 2: Get all students for logged-in mentor
 // -----------------------------------------------------------
 router.get('/my-mentees', protect, async (req, res) => {
   try {
     const mentorId = req.user._id;
     const mentees = await Student.find({ currentMentor: mentorId }).select(
-      'name registerNumber vmNumber department'
+      'name registerNumber vmNumber department batch section'
     );
     res.status(200).json(mentees);
   } catch (error) {
@@ -89,11 +134,11 @@ router.get('/my-mentees', protect, async (req, res) => {
 // -----------------------------------------------------------
 // ROUTE 3: Get all students for a specific mentor (HOD ONLY)
 // -----------------------------------------------------------
-router.get('/mentor/:mentorId', protect, isHod, async (req, res) => {
+router.get('/mentor/:mentorId', protect, isAdminOrHod, async (req, res) => {
   try {
     const { mentorId } = req.params;
     const mentees = await Student.find({ currentMentor: mentorId }).select(
-      'name registerNumber vmNumber'
+      'name registerNumber vmNumber department batch section'
     );
     res.status(200).json(mentees);
   } catch (error) {
@@ -114,7 +159,7 @@ router.get('/:studentId/details', protect, async (req, res) => {
       return res.status(404).json({ message: 'Student not found.' });
     }
 
-    if (user.role !== 'hod' && !student.currentMentor.equals(user._id)) {
+    if (user.role !== 'admin' && user.role !== 'hod' && !student.currentMentor.equals(user._id)) {
       return res.status(403).json({ message: 'You are not authorized to view this student.' });
     }
 
@@ -134,7 +179,7 @@ router.get('/:studentId/details', protect, async (req, res) => {
 // -----------------------------------------------------------
 // ROUTE 5: Update a student's profile (Mentor or HOD)
 // -----------------------------------------------------------
-router.put('/:studentId', protect, async (req, res) => {
+router.put('/:studentId', protect, upload.single('profileImage'), async (req, res) => {
   try {
     const { studentId } = req.params;
     const user = req.user;
@@ -145,10 +190,33 @@ router.put('/:studentId', protect, async (req, res) => {
       return res.status(404).json({ message: 'Student not found.' });
     }
 
-    if (user.role !== 'hod' && !student.currentMentor.equals(user._id)) {
+    if (user.role !== 'admin' && user.role !== 'hod' && !student.currentMentor.equals(user._id)) {
       return res.status(403).json({ message: 'You are not authorized to update this student.' });
     }
 
+    // Parse stringified JSON fields if using FormData
+    const parseIfString = (val) => typeof val === 'string' ? JSON.parse(val) : val;
+    ['personal', 'parents', 'addresses', 'contact', 'academics', 'health', 'achievements'].forEach(field => {
+       if (updateData[field]) {
+           updateData[field] = parseIfString(updateData[field]);
+       }
+    });
+
+    if (req.file) {
+      if (student.profileImage && student.profileImage.publicId) {
+        await deleteImage(student.profileImage.publicId);
+      }
+      const result = await uploadImage(req.file.buffer);
+      student.profileImage = { url: result.secure_url, publicId: result.public_id };
+    } else if (updateData.removeImage === 'true') {
+      if (student.profileImage && student.profileImage.publicId) {
+        await deleteImage(student.profileImage.publicId);
+      }
+      student.profileImage = { url: '', publicId: '' };
+    }
+
+    delete updateData.removeImage; // Do not apply to Object.assign
+    
     // Protect certain fields from being updated directly by arbitrary requests if necessary
     // Example: currentMentor, department shouldn't be updated here usually, but doing Object.assign is easiest.
     Object.assign(student, updateData);
@@ -166,7 +234,7 @@ router.put('/:studentId', protect, async (req, res) => {
 // -----------------------------------------------------------
 // ROUTE 6: Re-assign a new mentor to a student (HOD ONLY)
 // -----------------------------------------------------------
-router.put('/:studentId/assign-mentor', protect, isHod, async (req, res) => {
+router.put('/:studentId/assign-mentor', protect, isAdminOrHod, async (req, res) => {
   try {
     const { studentId } = req.params;
     const { newMentorId } = req.body;
@@ -183,10 +251,10 @@ router.put('/:studentId/assign-mentor', protect, isHod, async (req, res) => {
         .json({ message: 'New mentor not found or user is not a mentor.' });
     }
 
-    if (
+    if (req.user.role === 'hod' && (
       newMentor.department !== req.user.department ||
       student.department !== req.user.department
-    ) {
+    )) {
       return res
         .status(403)
         .json({ message: 'You can only assign mentors within your own department.' });
@@ -214,9 +282,9 @@ router.delete('/:studentId', protect, async (req, res) => {
       return res.status(404).json({ message: 'Student not found.' });
     }
 
-    // 🔹 HOD: can delete ANY student
-    if (user.role === 'hod') {
-      // no extra restriction – HoD is boss
+    // 🔹 HOD & Admin: can delete ANY student
+    if (user.role === 'hod' || user.role === 'admin') {
+      // no extra restriction
     }
     // 🔹 Mentor: only their own mentee
     else if (user.role === 'mentor') {
@@ -226,7 +294,7 @@ router.delete('/:studentId', protect, async (req, res) => {
           .json({ message: 'You are not authorized to delete this student.' });
       }
     } else {
-      return res.status(403).json({ message: 'Only HOD or Mentor can delete a student.' });
+      return res.status(403).json({ message: 'Only Admin, HOD, or Mentor can delete a student.' });
     }
 
     // Delete all associated records for this student
@@ -236,6 +304,10 @@ router.delete('/:studentId', protect, async (req, res) => {
       AcademicLog.deleteMany({ studentId }),
       ActivityLog.deleteMany({ studentId })
     ]);
+
+    if (student.profileImage && student.profileImage.publicId) {
+      await deleteImage(student.profileImage.publicId);
+    }
 
     await Student.findByIdAndDelete(studentId);
 
