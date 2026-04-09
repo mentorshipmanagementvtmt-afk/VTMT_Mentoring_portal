@@ -2,15 +2,20 @@ import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import api from 'api';
 import { Link } from 'react-router-dom';
-import { Card, Button, Typography,  Popconfirm, Spin, Empty, Tag } from 'antd';
-import { ArrowLeftOutlined, SyncOutlined, PlusOutlined } from '@ant-design/icons';
+import { Card, Button, Typography, Popconfirm, Spin, Empty, Tag, Modal, Form, Select } from 'antd';
+import { ArrowLeftOutlined, SyncOutlined, PlusOutlined, SwapOutlined } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
+const { Option } = Select;
 
 function ManageHodsPage() {
   const [hods, setHods] = useState([]);
   const [loading, setLoading] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
+  const [isReassignModalVisible, setIsReassignModalVisible] = useState(false);
+  const [reassignLoading, setReassignLoading] = useState(false);
+  const [departments, setDepartments] = useState([]);
+  const [form] = Form.useForm();
 
   const sortHods = (list) => {
     const arr = Array.isArray(list) ? [...list] : [];
@@ -22,20 +27,33 @@ function ManageHodsPage() {
     return arr;
   };
 
-  const loadHods = async () => {
+  const loadHodsAndDepartments = async () => {
     try {
       setLoading(true);
-      const res = await api.get('/users/hods');
-      setHods(sortHods(res.data || []));
+      const [hodsRes, mentorsRes] = await Promise.all([
+        api.get('/users/hods'),
+        api.get('/users/mentors') // Assuming admin can read all mentors
+      ]);
+      setHods(sortHods(hodsRes.data || []));
+      
+      const depts = new Set();
+      (mentorsRes.data || []).forEach(m => {
+        if (m.department) depts.add(m.department);
+      });
+      (hodsRes.data || []).forEach(h => {
+        if (h.department) depts.add(h.department);
+      });
+      setDepartments(Array.from(depts).sort());
+
     } catch (e) {
-      toast.error(e?.response?.data?.message || 'Failed to load HODs');
+      toast.error(e?.response?.data?.message || 'Failed to load data');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadHods();
+    loadHodsAndDepartments();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -53,6 +71,37 @@ function ManageHodsPage() {
       toast.error(e?.response?.data?.message || 'Failed to delete HOD');
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  const showReassignModal = () => {
+    setIsReassignModalVisible(true);
+    form.resetFields();
+  };
+
+  const handleReassignCancel = () => {
+    setIsReassignModalVisible(false);
+  };
+
+  const handleReassignSubmit = async (values) => {
+    if (values.oldDepartment === values.newDepartment) {
+      toast.error("Source and destination departments cannot be the same.");
+      return;
+    }
+    
+    setReassignLoading(true);
+    try {
+      await api.put('/users/hods/reassign', {
+        oldDepartment: values.oldDepartment,
+        newDepartment: values.newDepartment
+      });
+      toast.success('Mentors and Students reassigned successfully');
+      setIsReassignModalVisible(false);
+      loadHodsAndDepartments();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to reassign department');
+    } finally {
+      setReassignLoading(false);
     }
   };
 
@@ -80,8 +129,11 @@ function ManageHodsPage() {
             <Title level={3} style={{ margin: 0, color: '#0f172a' }}>Manage HOD Profiles</Title>
             
             <div style={{ display: 'flex', gap: 12 }}>
-              <Button type="default" icon={<SyncOutlined />} onClick={loadHods} loading={loading} style={{ borderRadius: 8 }}>
+              <Button type="default" icon={<SyncOutlined />} onClick={loadHodsAndDepartments} loading={loading} style={{ borderRadius: 8 }}>
                 Refresh
+              </Button>
+              <Button type="default" icon={<SwapOutlined />} onClick={showReassignModal} style={{ borderRadius: 8, color: '#f59e0b', borderColor: '#f59e0b' }}>
+                Reassign Faculty
               </Button>
               <Link to="/hods/create">
                 <Button type="primary" icon={<PlusOutlined />} style={{ background: '#10b981', borderColor: '#10b981', borderRadius: 8, fontWeight: 600 }}>
@@ -141,6 +193,54 @@ function ManageHodsPage() {
             </div>
           )}
         </Card>
+        <Modal
+          title="Reassign Faculty & Students"
+          open={isReassignModalVisible}
+          onCancel={handleReassignCancel}
+          footer={null}
+        >
+          <div style={{ marginBottom: 16 }}>
+            <Text type="secondary">
+              Use this tool to reassign all mentors and their students from an old/deleted department to an active department. 
+              This effectively merges or moves the department's faculty.
+            </Text>
+          </div>
+          <Form form={form} layout="vertical" onFinish={handleReassignSubmit}>
+            <Form.Item 
+              name="oldDepartment" 
+              label="From Department (Old)" 
+              rules={[{ required: true, message: 'Please select the source department' }]}
+            >
+              <Select placeholder="Select department to move FROM" showSearch>
+                {departments.map(dept => (
+                  <Option key={`old-${dept}`} value={dept}>{dept}</Option>
+                ))}
+              </Select>
+            </Form.Item>
+            
+            <Form.Item 
+              name="newDepartment" 
+              label="To Department (New)" 
+              rules={[{ required: true, message: 'Please select the destination department' }]}
+            >
+              <Select placeholder="Select active department to move TO" showSearch>
+                {hods.map(hod => (
+                  <Option key={`new-${hod.department}`} value={hod.department}>{hod.department} (HOD: {hod.name})</Option>
+                ))}
+              </Select>
+            </Form.Item>
+            
+            <Form.Item style={{ textAlign: 'right', marginTop: 32, marginBottom: 0 }}>
+              <Button onClick={handleReassignCancel} style={{ marginRight: 8 }}>
+                Cancel
+              </Button>
+              <Button type="primary" htmlType="submit" loading={reassignLoading} style={{ background: '#f59e0b', borderColor: '#f59e0b' }}>
+                Reassign Now
+              </Button>
+            </Form.Item>
+          </Form>
+        </Modal>
+
       </div>
     </div>
   );

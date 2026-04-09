@@ -15,8 +15,8 @@ import AssessmentLogPage from './pages/AssessmentLogPage.js';
 import InterventionLogPage from './pages/InterventionLogPage.js';
 import AcademicProblemsLogPage from './pages/AcademicProblemsLogPage.js';
 import ActivitiesLogPage from './pages/ActivitiesLogPage.js';
-
-
+import AttendanceLogPage from './pages/AttendanceLogPage.js';
+import ProfilePage from './pages/ProfilePage.js';
 function App() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
@@ -30,11 +30,13 @@ function App() {
             <Route path="/students" element={<MenteeListPage />} />
             <Route path="/mentee/:studentId" element={<MenteeDetailsPage />} />
             <Route path="/mentee/:studentId/edit" element={<EditStudentPage />} />
+            <Route path="/attendance/log" element={<AttendanceLogPage />} />
             <Route path="/performance" element={<PerformanceReportPage />} />
             <Route path="/mentee/:studentId/assessments" element={<AssessmentLogPage />} />
             <Route path="/mentee/:studentId/interventions" element={<InterventionLogPage />} />
             <Route path="/mentee/:studentId/academic-problems" element={<AcademicProblemsLogPage />} />
             <Route path="/mentee/:studentId/activities" element={<ActivitiesLogPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

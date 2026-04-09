@@ -217,35 +217,46 @@ router.get('/mentor/:mentorId', protect, isAdminOrHod, async (req, res) => {
   }
 });
 
+// -----------------------------------------------------------
+// Update a mentor's profile (HOD or Admin)
+// -----------------------------------------------------------
 router.put('/mentor/:mentorId', protect, isAdminOrHod, upload.single('profileImage'), async (req, res) => {
   try {
     const { mentorId } = req.params;
-    const { name, email, mtsNumber, designation, department } = req.body;
-
-    let query = { _id: mentorId, role: 'mentor' };
-    if (req.user.role === 'hod') {
-      query.department = req.user.department;
-    }
-
-    const mentor = await User.findOne(query);
+    const mentor = await User.findOne({ _id: mentorId, role: 'mentor' });
     if (!mentor) {
       return res.status(404).json({ message: 'Mentor not found.' });
     }
 
-    const existingUser = await User.findOne({
-      $or: [{ email }, { mtsNumber }],
-      _id: { $ne: mentorId }
-    });
-    if (existingUser) {
-      return res.status(400).json({ message: 'Another user with this email or MTS Number already exists.' });
+    // HOD can only edit mentors in their own department
+    if (req.user.role === 'hod' && mentor.department !== req.user.department) {
+      return res.status(403).json({ message: 'You can only edit mentors within your own department.' });
     }
 
-    mentor.name = name || mentor.name;
-    mentor.email = email || mentor.email;
-    mentor.mtsNumber = mtsNumber || mentor.mtsNumber;
-    mentor.designation = designation || mentor.designation;
-    if (req.user.role === 'admin' && department) {
-      mentor.department = department;
+    const { name, email, mtsNumber, designation, password } = req.body;
+
+    // Check for duplicate email/mtsNumber
+    if (email || mtsNumber) {
+      const conflict = await User.findOne({
+        $or: [
+          ...(email ? [{ email }] : []),
+          ...(mtsNumber ? [{ mtsNumber }] : [])
+        ],
+        _id: { $ne: mentorId }
+      });
+      if (conflict) {
+        return res.status(400).json({ message: 'Another user with this email or MTS Number already exists.' });
+      }
+    }
+
+    if (name) mentor.name = name;
+    if (email) mentor.email = email;
+    if (mtsNumber) mentor.mtsNumber = mtsNumber;
+    if (designation) mentor.designation = designation;
+
+    if (password) {
+      const salt = await bcrypt.genSalt(10);
+      mentor.password = await bcrypt.hash(password, salt);
     }
 
     if (req.file) {
@@ -261,20 +272,23 @@ router.put('/mentor/:mentorId', protect, isAdminOrHod, upload.single('profileIma
       mentor.profileImage = { url: '', publicId: '' };
     }
 
-    const updatedMentor = await mentor.save();
+    const updated = await mentor.save();
 
     res.status(200).json({
-      _id: updatedMentor._id,
-      name: updatedMentor.name,
-      email: updatedMentor.email,
-      mtsNumber: updatedMentor.mtsNumber,
-      designation: updatedMentor.designation,
-      profileImage: updatedMentor.profileImage
+      _id: updated._id,
+      name: updated.name,
+      email: updated.email,
+      mtsNumber: updated.mtsNumber,
+      designation: updated.designation,
+      profileImage: updated.profileImage,
+      department: updated.department,
+      role: updated.role
     });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
+
 
 router.get('/hods', protect, isAdmin, async (req, res) => {
   try {
@@ -374,10 +388,65 @@ router.delete('/hods/:hodId', protect, isAdmin, async (req, res) => {
   }
 });
 
-router.put('/profile/image', protect, upload.single('profileImage'), async (req, res) => {
+router.put('/hods/reassign', protect, isAdmin, async (req, res) => {
+  try {
+    const { oldDepartment, newDepartment } = req.body;
+    if (!oldDepartment || !newDepartment) {
+      return res.status(400).json({ message: 'Both oldDepartment and newDepartment are required.' });
+    }
+
+    // Reassign all mentors from oldDepartment to newDepartment
+    await User.updateMany(
+      { role: 'mentor', department: oldDepartment },
+      { $set: { department: newDepartment } }
+    );
+
+    // Reassign all students from oldDepartment to newDepartment
+    await Student.updateMany(
+      { department: oldDepartment },
+      { $set: { department: newDepartment } }
+    );
+
+    res.status(200).json({ message: 'Mentors and students successfully reassigned to the new department.' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+router.get('/profile', protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select('-password');
+    if (!user) return res.status(404).json({ message: 'User not found.' });
+    res.status(200).json(user);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+router.put('/profile', protect, upload.single('profileImage'), async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ message: 'User not found.' });
+
+    const { name, email, mtsNumber, designation, password } = req.body;
+
+    const existingUser = await User.findOne({
+      $or: [{ email }, { mtsNumber }],
+      _id: { $ne: req.user._id }
+    });
+    if (existingUser) {
+      return res.status(400).json({ message: 'Another user with this email or MTS Number already exists.' });
+    }
+
+    if (name) user.name = name;
+    if (email) user.email = email;
+    if (mtsNumber) user.mtsNumber = mtsNumber;
+    if (designation) user.designation = designation;
+
+    if (password) {
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(password, salt);
+    }
 
     if (req.file) {
       if (user.profileImage && user.profileImage.publicId) {
@@ -385,27 +454,25 @@ router.put('/profile/image', protect, upload.single('profileImage'), async (req,
       }
       const result = await uploadImage(req.file.buffer);
       user.profileImage = { url: result.secure_url, publicId: result.public_id };
-      await user.save();
-      return res.status(200).json({ profileImage: user.profileImage });
-    }
-    res.status(400).json({ message: 'No image uploaded.' });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
-  }
-});
-
-router.delete('/profile/image', protect, async (req, res) => {
-  try {
-    const user = await User.findById(req.user._id);
-    if (!user) return res.status(404).json({ message: 'User not found.' });
-
-    if (user.profileImage && user.profileImage.publicId) {
-      await deleteImage(user.profileImage.publicId);
+    } else if (req.body.removeImage === 'true') {
+      if (user.profileImage && user.profileImage.publicId) {
+        await deleteImage(user.profileImage.publicId);
+      }
       user.profileImage = { url: '', publicId: '' };
-      await user.save();
-      return res.status(200).json({ message: 'Profile image deleted.' });
     }
-    res.status(400).json({ message: 'No image to delete.' });
+
+    const updatedUser = await user.save();
+
+    res.status(200).json({
+      _id: updatedUser._id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      mtsNumber: updatedUser.mtsNumber,
+      designation: updatedUser.designation,
+      profileImage: updatedUser.profileImage,
+      department: updatedUser.department,
+      role: updatedUser.role
+    });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }

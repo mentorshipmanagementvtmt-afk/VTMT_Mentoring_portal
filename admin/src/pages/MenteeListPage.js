@@ -2,8 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-toastify';
 import { useParams, Link } from 'react-router-dom';
 import api from 'api';
-import { Card, Row, Col, Typography, Button, Spin, Empty,  Popconfirm } from 'antd';
-import { ArrowLeftOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Card, Row, Col, Typography, Spin, Empty } from 'antd';
+import { ArrowLeftOutlined } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
 
@@ -28,15 +28,6 @@ function MenteeListPage() {
     fetchMentees();
   }, [fetchMentees]);
 
-  const handleDelete = async (studentId) => {
-    try {
-      await api.delete(`/students/${studentId}`);
-      setMentees(mentees.filter(mentee => mentee._id !== studentId));
-      toast.success('Mentee deleted successfully');
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to delete student.');
-    }
-  };
 
   if (loading) {
     return (
@@ -75,21 +66,7 @@ function MenteeListPage() {
                       <Text strong style={{ color: '#0ea5e9', fontSize: 14, display: 'block', marginTop: 4 }}>Reg: {mentee.registerNumber}</Text>
                     </Link>
                     
-                    <div style={{ marginTop: 'auto' }}>
-                      <Popconfirm
-                        title={`Delete ${mentee.name}?`}
-                        description="Are you sure you want to delete this mentee?"
-                        onConfirm={() => handleDelete(mentee._id)}
-                        okText="Yes, delete"
-                        cancelText="Cancel"
-                        okButtonProps={{ danger: true }}
-                      >
-                        <Button danger type="primary" icon={<DeleteOutlined />} block style={{ borderRadius: 8, fontWeight: 500 }}>
-                           Delete Mentee
-                        </Button>
-                      </Popconfirm>
-                    </div>
-                  </Card>
+                      </Card>
                 </Col>
               ))}
             </Row>

@@ -3,8 +3,9 @@ import { toast } from 'react-toastify';
 import { useParams, Link } from 'react-router-dom';
 import api from '../api';
 import { Card, Row, Col, Typography, Button, Spin, Avatar, Space, Tag, Descriptions, Divider } from 'antd';
-import { ArrowLeftOutlined, EditOutlined, ReadOutlined, WarningOutlined, CommentOutlined, FlagOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, EditOutlined, ReadOutlined, WarningOutlined, CommentOutlined, FlagOutlined, DownloadOutlined } from '@ant-design/icons';
 import { useAuth } from '../context/AuthContext';
+import { downloadStudentReport } from '../utils/reportGenerator';
 
 const { Title, Text } = Typography;
 
@@ -13,6 +14,7 @@ function MenteeDetailsPage() {
   const { user } = useAuth();
   const [student, setStudent] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const fetchStudent = async () => {
     try {
@@ -38,7 +40,7 @@ function MenteeDetailsPage() {
         <Link to={user?.role === 'mentor' ? `/mentor/${user._id}` : '/students'} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24, fontSize: 16, color: '#0ea5e9', textDecoration: 'none', fontWeight: 500 }}>
           <ArrowLeftOutlined /> Back to Students
         </Link>
-        <Card bordered={false} style={{ borderRadius: 16, marginBottom: 24 }}>
+        <Card variant="borderless" style={{ borderRadius: 16, marginBottom: 24 }}>
           <Row gutter={24} align="middle">
              <Col>
                {student.profileImage?.url ? (
@@ -62,6 +64,15 @@ function MenteeDetailsPage() {
                     <Button type="primary" icon={<EditOutlined />}>Edit Profile Information</Button>
                   </Link>
                 )}
+                <Button 
+                  type="primary" 
+                  icon={<DownloadOutlined />} 
+                  onClick={() => downloadStudentReport(studentId, setIsDownloading)} 
+                  loading={isDownloading}
+                  style={{ background: '#0ea5e9', borderColor: '#0ea5e9', marginLeft: 8 }}
+                >
+                  Download Report
+                </Button>
              </Col>
           </Row>
         </Card>
@@ -91,7 +102,7 @@ function MenteeDetailsPage() {
            </Col>
         </Row>
 
-        <Card title="Detailed Profile Information" bordered={false} style={{ borderRadius: 16 }}>
+        <Card title="Detailed Profile Information" variant="borderless" style={{ borderRadius: 16 }}>
            <Descriptions bordered column={{ xs: 1, sm: 2 }}>
              <Descriptions.Item label="Date of Birth">{student.personal?.dateOfBirth ? new Date(student.personal.dateOfBirth).toLocaleDateString() : 'N/A'}</Descriptions.Item>
              <Descriptions.Item label="Contact Number">{student.contact?.contactNumber || 'N/A'}</Descriptions.Item>

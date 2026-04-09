@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
-import { Row, Col, Button, Typography, Table, Card, Spin, Avatar } from 'antd';
-import { UserOutlined } from '@ant-design/icons';
+import { Row, Col, Button, Typography, Table, Card, Spin, Avatar, Alert } from 'antd';
+import { UserOutlined, WarningOutlined } from '@ant-design/icons';
 import api from '../api';
 import { toast } from 'react-toastify';
 
@@ -12,10 +12,12 @@ function HodDashboard() {
   const { user } = useAuth();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [alerts, setAlerts] = useState([]);
 
   useEffect(() => {
     if (user?.department) {
       fetchAnalytics();
+      fetchAlerts();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.department]);
@@ -28,6 +30,16 @@ function HodDashboard() {
       toast.error('Failed to load mentor contribution analytics.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchAlerts = async () => {
+    try {
+      const res = await api.get('/attendance/monitor');
+      const flagged = res.data.filter(m => m.isFlagged);
+      setAlerts(flagged);
+    } catch (err) {
+      console.log('Failed to fetch attendance alerts');
     }
   };
 
@@ -76,29 +88,69 @@ function HodDashboard() {
         </div>
       </div>
       
-      <Row gutter={[16, 16]} style={{ paddingBottom: 32, borderBottom: '1px solid #e2e8f0', marginBottom: 32 }}>
-        <Col xs={24} sm={12} lg={8}>
+      {alerts.length > 0 && (
+        <Alert
+          title="Attention Required: Faculty Compliance Issues"
+          description={
+            <div style={{ marginTop: 8 }}>
+              <p>The following faculty members have been flagged for attendance compliance issues:</p>
+              <ul style={{ paddingLeft: 20 }}>
+                {alerts.map(a => (
+                  <li key={a.mentorId}>
+                    <strong>{a.mentorName}</strong> - 
+                    {a.missingWeeksFlag ? ' Missing recent attendance logs (>7 days).' : ` Low average mentee attendance (${a.avgMenteePercentage}%).`}
+                  </li>
+                ))}
+              </ul>
+              <Link to="/attendance/monitor">
+                <Button type="primary" danger size="small" style={{ marginTop: 8 }}>Go to Monitoring Dashboard</Button>
+              </Link>
+            </div>
+          }
+          type="error"
+          showIcon
+          icon={<WarningOutlined />}
+          style={{ marginBottom: 24, borderRadius: 8, border: '1px solid #fecaca', background: '#fef2f2' }}
+        />
+      )}
+
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, paddingBottom: 32, borderBottom: '1px solid #e2e8f0', marginBottom: 32 }}>
+        <div style={{ flex: '1 1 180px', minWidth: 160 }}>
           <Link to={"/departments/"+user.department} style={{ display: 'block' }}>
             <Button block type="primary" style={{ background: '#0ea5e9', borderColor: '#0ea5e9', borderRadius: 8, height: 44, fontWeight: 500 }}>
               Manage Faculties
             </Button>
           </Link>
-        </Col>
-        <Col xs={24} sm={12} lg={8}>
+        </div>
+        <div style={{ flex: '1 1 180px', minWidth: 160 }}>
           <Link to="/mentors/create" style={{ display: 'block' }}>
             <Button block type="primary" style={{ background: '#10b981', borderColor: '#10b981', borderRadius: 8, height: 44, fontWeight: 500 }}>
               Add New Faculty
             </Button>
           </Link>
-        </Col>
-        <Col xs={24} sm={12} lg={8}>
+        </div>
+        <div style={{ flex: '1 1 180px', minWidth: 160 }}>
           <Link to="/students/create" style={{ display: 'block' }}>
             <Button block type="primary" style={{ background: '#8b5cf6', borderColor: '#8b5cf6', borderRadius: 8, height: 44, fontWeight: 500 }}>
               Add New Student
             </Button>
           </Link>
-        </Col>
-      </Row>
+        </div>
+        <div style={{ flex: '1 1 180px', minWidth: 160 }}>
+          <Link to="/students" style={{ display: 'block' }}>
+            <Button block type="primary" style={{ background: '#f59e0b', borderColor: '#f59e0b', borderRadius: 8, height: 44, fontWeight: 500 }}>
+               View Students
+            </Button>
+          </Link>
+        </div>
+        <div style={{ flex: '1 1 180px', minWidth: 160 }}>
+          <Link to="/mentee-allocation" style={{ display: 'block' }}>
+            <Button block type="primary" style={{ background: '#6366f1', borderColor: '#6366f1', borderRadius: 8, height: 44, fontWeight: 500 }}>
+               Mentee Allocation
+            </Button>
+          </Link>
+        </div>
+      </div>
 
       <div style={{ marginBottom: 24 }}>
         <Title level={4} style={{ color: '#0f172a', marginBottom: 8 }}>Department Faculty Leaderboard</Title>
@@ -106,7 +158,7 @@ function HodDashboard() {
           Live rankings based on aggregate scores from students mentored by each faculty member in {user.department}.
         </Text>
 
-        <Card bordered={false} style={{ borderRadius: 12, border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }} bodyStyle={{ padding: 0 }}>
+        <Card variant="borderless" style={{ borderRadius: 12, border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }} styles={{ body: { padding: 0 } }}>
           {loading ? (
              <div style={{ padding: '60px 0', textAlign: 'center' }}><Spin size="large" /></div>
           ) : (

@@ -131,16 +131,6 @@ function AssessmentForm({ studentId, onAssessmentAdded, onCancel, assessmentToEd
           <Col xs={8} sm={6}><Form.Item label="NSS (W)" name="nssW"><InputNumber min={0} style={{ width: '100%' }} /></Form.Item></Col>
         </Row>
 
-        <Form.Item style={{ marginTop: 24, marginBottom: 0 }}>
-          <div style={{ display: 'flex', gap: 12 }}>
-            <Button type="primary" htmlType="submit" loading={saving} style={{ background: '#0ea5e9', borderColor: '#0ea5e9', borderRadius: 8, fontWeight: 600 }}>
-              {assessmentToEdit ? 'Update Assessment' : 'Save Assessment'}
-             </Button>
-            <Button type="default" onClick={onCancel} style={{ borderRadius: 8, fontWeight: 500 }}>
-              Cancel
-            </Button>
-          </div>
-        </Form.Item>
       </Form>
     </div>
   );

@@ -3,7 +3,8 @@ import { toast } from 'react-toastify';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../api';
 import { Card, Row, Col, Typography, Button, Spin, Empty, Popconfirm, Table, Tag, Space, Select } from 'antd';
-import { ArrowLeftOutlined, DeleteOutlined, EditOutlined, FolderOpenOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, DeleteOutlined, EditOutlined, FolderOpenOutlined, DownloadOutlined } from '@ant-design/icons';
+import { downloadStudentReport } from '../utils/reportGenerator';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -11,6 +12,7 @@ const { Option } = Select;
 function MenteeListPage() {
   const [mentees, setMentees] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [downloadingId, setDownloadingId] = useState(null);
   const navigate = useNavigate();
 
   // Filters
@@ -83,6 +85,16 @@ function MenteeListPage() {
               Profile & Activities
             </Button>
           </Link>
+          <Button 
+            type="primary" 
+            size="small" 
+            icon={<DownloadOutlined />} 
+            onClick={() => downloadStudentReport(record._id, (isDl) => setDownloadingId(isDl ? record._id : null))}
+            loading={downloadingId === record._id}
+            style={{ borderRadius: 6, background: '#0ea5e9', borderColor: '#0ea5e9', fontWeight: 500 }}
+          >
+            Download
+          </Button>
           <Popconfirm
             title={`Delete ${record.name}?`}
             description="Are you sure you want to completely erase this mentee?"
@@ -113,7 +125,7 @@ function MenteeListPage() {
            View, filter, and edit the profiles of all students officially assigned to you.
         </Text>
 
-        <Card bordered={false} style={{ borderRadius: 12, border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.02)', marginBottom: 24 }}>
+        <Card variant="borderless" style={{ borderRadius: 12, border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.02)', marginBottom: 24 }}>
            <Space size="large" align="end" wrap>
               <div>
                 <Text strong style={{ display: 'block', marginBottom: 4 }}>Year (Batch)</Text>
@@ -144,7 +156,7 @@ function MenteeListPage() {
            </Space>
         </Card>
 
-        <Card bordered={false} bodyStyle={{ padding: 0 }} style={{ borderRadius: 12, border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.02)', overflow: 'hidden' }}>
+        <Card variant="borderless" styles={{ body: { padding: 0 } }} style={{ borderRadius: 12, border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.02)', overflow: 'hidden' }}>
           <Table 
             columns={columns} 
             dataSource={mentees} 

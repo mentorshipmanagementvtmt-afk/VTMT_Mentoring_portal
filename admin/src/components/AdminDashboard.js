@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Row, Col, Button, Typography, Card, Table, Spin } from 'antd';
+import { Row, Col, Button, Typography, Card, Table, Spin, Alert, List } from 'antd';
+import { WarningOutlined, CompassOutlined } from '@ant-design/icons';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from 'recharts';
 import api from '../api';
 import { toast } from 'react-toastify';
@@ -10,9 +11,11 @@ const { Title, Text } = Typography;
 function AdminDashboard() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [alerts, setAlerts] = useState([]);
 
   useEffect(() => {
     fetchAnalytics();
+    fetchAlerts();
   }, []);
 
   const fetchAnalytics = async () => {
@@ -23,6 +26,16 @@ function AdminDashboard() {
       toast.error('Failed to load department analytics.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchAlerts = async () => {
+    try {
+      const res = await api.get('/attendance/monitor');
+      const flagged = res.data.filter(m => m.isFlagged);
+      setAlerts(flagged);
+    } catch (err) {
+      console.log('Failed to fetch attendance alerts');
     }
   };
 
@@ -60,26 +73,59 @@ function AdminDashboard() {
           </Text>
         </div>
       </div>
+
+      {alerts.length > 0 && (
+        <Alert
+          title="Attention Required: Faculty Compliance Issues"
+          description={
+            <div style={{ marginTop: 8 }}>
+              <p>The following faculty members have been flagged for attendance compliance issues:</p>
+              <ul style={{ paddingLeft: 20 }}>
+                {alerts.map(a => (
+                  <li key={a.mentorId}>
+                    <strong>{a.mentorName} ({a.department})</strong> - 
+                    {a.missingWeeksFlag ? ' Missing recent attendance logs (>7 days).' : ` Low average mentee attendance (${a.avgMenteePercentage}%).`}
+                  </li>
+                ))}
+              </ul>
+              <Link to="/attendance/monitor">
+                <Button type="primary" danger size="small" style={{ marginTop: 8 }}>Go to Monitoring Dashboard</Button>
+              </Link>
+            </div>
+          }
+          type="error"
+          showIcon
+          icon={<WarningOutlined />}
+          style={{ marginBottom: 24, borderRadius: 8, border: '1px solid #fecaca', background: '#fef2f2' }}
+        />
+      )}
       
       <Row gutter={[16, 16]} style={{ paddingBottom: 32, borderBottom: '1px solid #e2e8f0', marginBottom: 32 }}>
-        <Col xs={24} sm={12} lg={8}>
+        <Col xs={24} sm={12} lg={6}>
           <Link to="/hods" style={{ display: 'block' }}>
             <Button block type="primary" style={{ background: '#3b82f6', borderColor: '#3b82f6', borderRadius: 8, height: 44, fontWeight: 500 }}>
               Manage HOD Profiles
             </Button>
           </Link>
         </Col>
-        <Col xs={24} sm={12} lg={8}>
+        <Col xs={24} sm={12} lg={6}>
           <Link to="/departments" style={{ display: 'block' }}>
             <Button block type="primary" style={{ background: '#0ea5e9', borderColor: '#0ea5e9', borderRadius: 8, height: 44, fontWeight: 500 }}>
               Manage Faculties
             </Button>
           </Link>
         </Col>
-        <Col xs={24} sm={12} lg={8}>
+        <Col xs={24} sm={12} lg={6}>
           <Link to="/mentors/create" style={{ display: 'block' }}>
             <Button block type="primary" style={{ background: '#10b981', borderColor: '#10b981', borderRadius: 8, height: 44, fontWeight: 500 }}>
                Add New Faculty
+            </Button>
+          </Link>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Link to="/students" style={{ display: 'block' }}>
+            <Button block type="primary" style={{ background: '#8b5cf6', borderColor: '#8b5cf6', borderRadius: 8, height: 44, fontWeight: 500 }}>
+               View Students
             </Button>
           </Link>
         </Col>
@@ -100,7 +146,7 @@ function AdminDashboard() {
         ) : (
           <Row gutter={[24, 24]}>
             <Col xs={24} xl={14}>
-              <Card title="Analytics Chart" bordered={false} style={{ borderRadius: 12, border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+              <Card title="Analytics Chart" variant="borderless" style={{ borderRadius: 12, border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
                 <div style={{ height: 350, width: '100%' }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={data} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
@@ -123,7 +169,7 @@ function AdminDashboard() {
             </Col>
             
             <Col xs={24} xl={10}>
-              <Card title="Rankings Table" bordered={false} style={{ borderRadius: 12, border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }} bodyStyle={{ padding: 0 }}>
+              <Card title="Rankings Table" variant="borderless" style={{ borderRadius: 12, border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }} styles={{ body: { padding: 0 } }}>
                 <Table 
                   columns={columns} 
                   dataSource={data} 

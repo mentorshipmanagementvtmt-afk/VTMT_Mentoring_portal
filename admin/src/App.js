@@ -9,9 +9,7 @@ import DashboardPage from './pages/DashboardPage.js';
 import ProtectedRoute from './components/ProtectedRoute.js';
 import MenteeListPage from './pages/MenteeListPage.js';
 import MenteeDetailsPage from './pages/MenteeDetailsPage.js';
-import EditStudentPage from './pages/EditStudentPage.js';
 import PerformanceReportPage from './pages/PerformanceReportPage.js';
-import EditMentorPage from './pages/EditMentorPage.js';
 import ManageStudentsPage from './pages/ManageStudentsPage.js';
 import AssessmentLogPage from './pages/AssessmentLogPage.js';
 import InterventionLogPage from './pages/InterventionLogPage.js';
@@ -24,6 +22,7 @@ import ManageDepartmentsPage from './pages/ManageDepartmentsPage.js';
 import DepartmentDetailsPage from './pages/DepartmentDetailsPage.js';
 import MentorDetailsPage from './pages/MentorDetailsPage.js';
 import CreateMentorPage from './pages/CreateMentorPage.js';
+import AttendanceMonitorPage from './pages/AttendanceMonitorPage.js';
 
 function App() {
   return (
@@ -35,20 +34,19 @@ function App() {
 
           <Route element={<ProtectedRoute />}>
             <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/attendance/monitor" element={<AttendanceMonitorPage />} />
             <Route path="/departments" element={<ManageDepartmentsPage />} />
             <Route path="/departments/:deptName" element={<DepartmentDetailsPage />} />
             <Route path="/mentors/create" element={<CreateMentorPage />} />
             <Route path="/mentor/:mentorId" element={<MentorDetailsPage />} />
             <Route path="/mentor/:mentorId/mentees" element={<MenteeListPage />} />
             <Route path="/mentee/:studentId" element={<MenteeDetailsPage />} />
-            <Route path="/mentee/:studentId/edit" element={<EditStudentPage />} />
             <Route path="/performance" element={<PerformanceReportPage />} />
             <Route path="/students" element={<ManageStudentsPage />} />
             <Route path="/mentee/:studentId/assessments" element={<AssessmentLogPage />} />
             <Route path="/mentee/:studentId/interventions" element={<InterventionLogPage />} />
             <Route path="/mentee/:studentId/academic-problems" element={<AcademicProblemsLogPage />} />
             <Route path="/mentee/:studentId/activities" element={<ActivitiesLogPage />} />
-            <Route path="/mentor/:mentorId/edit" element={<EditMentorPage />} />
             <Route path="/hods" element={<ManageHodsPage />} />
             <Route path="/hods/create" element={<CreateHodPage />} />
             <Route path="/hod/:id" element={<HodDetailsPage />} />

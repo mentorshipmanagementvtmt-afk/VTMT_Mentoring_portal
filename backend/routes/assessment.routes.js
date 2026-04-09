@@ -87,8 +87,18 @@ router.get('/report/:studentId', protect, async (req, res) => {
     }
 
     const user = req.user
-    if (user.role !== 'hod' && !student.currentMentor._id.equals(user._id)) {
-      return res.status(403).json({ message: 'You are not authorized to view this report.' })
+    if (user.role === 'admin') {
+      // Admin can view any report
+    } else if (user.role === 'hod') {
+      if (student.department !== user.department) {
+        return res.status(403).json({ message: 'You can only view reports for students in your department.' })
+      }
+    } else if (user.role === 'mentor') {
+      if (!student.currentMentor._id.equals(user._id)) {
+        return res.status(403).json({ message: 'You are not authorized to view this report.' })
+      }
+    } else {
+      return res.status(403).json({ message: 'Unauthorized role.' })
     }
 
     const assessments = await Assessment.find({ studentId: studentId })

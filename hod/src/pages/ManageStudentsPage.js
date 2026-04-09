@@ -99,7 +99,7 @@ function ManageStudentsPage() {
            View all students inside your department: <Text strong>{user?.department}</Text>. Profile editing is locked for HODs.
         </Text>
 
-        <Card bordered={false} style={{ borderRadius: 12, border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.02)', marginBottom: 24 }}>
+        <Card variant="borderless" style={{ borderRadius: 12, border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.02)', marginBottom: 24 }}>
            <Space size="large" align="end" wrap>
               <div>
                 <Text strong style={{ display: 'block', marginBottom: 4 }}>Year (Batch)</Text>
@@ -131,7 +131,7 @@ function ManageStudentsPage() {
            </Space>
         </Card>
 
-        <Card bordered={false} bodyStyle={{ padding: 0 }} style={{ borderRadius: 12, border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.02)', overflow: 'hidden' }}>
+        <Card variant="borderless" styles={{ body: { padding: 0 } }} style={{ borderRadius: 12, border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.02)', overflow: 'hidden' }}>
           <Table 
             columns={columns} 
             dataSource={students} 

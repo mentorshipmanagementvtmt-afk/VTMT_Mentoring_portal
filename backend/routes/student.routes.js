@@ -228,7 +228,8 @@ router.put('/:studentId', protect, upload.single('profileImage'), async (req, re
       return res.status(400).json({ message: 'Student with this Register Number or VM Number already exists.' });
     }
     res.status(500).json({ message: 'Server error', error: error.message });
-  }
+  } 
+
 });
 
 // -----------------------------------------------------------
@@ -264,6 +265,93 @@ router.put('/:studentId/assign-mentor', protect, isAdminOrHod, async (req, res) 
     await student.save();
 
     res.status(200).json({ message: 'Mentor successfully reassigned.', student });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// -----------------------------------------------------------
+// ROUTE 6.4: Assign mentor to a specific list of students (HOD/Admin)
+// -----------------------------------------------------------
+router.put('/assign-mentor-bulk-list', protect, isAdminOrHod, async (req, res) => {
+  try {
+    const { studentIds, newMentorId } = req.body;
+
+    if (!studentIds || !Array.isArray(studentIds) || studentIds.length === 0) {
+      return res.status(400).json({ message: 'studentIds array is required and must not be empty.' });
+    }
+    if (!newMentorId) {
+      return res.status(400).json({ message: 'newMentorId is required.' });
+    }
+
+    const newMentor = await User.findById(newMentorId);
+    if (!newMentor || newMentor.role !== 'mentor') {
+      return res.status(404).json({ message: 'Mentor not found or user is not a mentor.' });
+    }
+
+    // HOD: mentor must be in the same department
+    if (req.user.role === 'hod' && newMentor.department !== req.user.department) {
+      return res.status(403).json({ message: 'You can only assign mentors within your own department.' });
+    }
+
+    // HOD: students must belong to their department
+    if (req.user.role === 'hod') {
+      const studentsOutside = await Student.countDocuments({
+        _id: { $in: studentIds },
+        department: { $ne: req.user.department }
+      });
+      if (studentsOutside > 0) {
+        return res.status(403).json({ message: 'Some selected students do not belong to your department.' });
+      }
+    }
+
+    const result = await Student.updateMany(
+      { _id: { $in: studentIds } },
+      { $set: { currentMentor: newMentorId } }
+    );
+
+    res.status(200).json({
+      message: `Successfully assigned ${result.modifiedCount} student(s) to ${newMentor.name}.`
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// -----------------------------------------------------------
+// ROUTE 6.5: Bulk Re-assign students to a new mentor (HOD ONLY)
+// -----------------------------------------------------------
+router.put('/reassign-mentor-bulk', protect, isAdminOrHod, async (req, res) => {
+  try {
+    const { oldMentorId, newMentorId } = req.body;
+    
+    if (!oldMentorId || !newMentorId) {
+      return res.status(400).json({ message: 'Both oldMentorId and newMentorId are required.' });
+    }
+
+    const newMentor = await User.findById(newMentorId);
+    if (!newMentor || newMentor.role !== 'mentor') {
+      return res.status(404).json({ message: 'New mentor not found or user is not a mentor.' });
+    }
+
+    if (req.user.role === 'hod' && newMentor.department !== req.user.department) {
+      return res.status(403).json({ message: 'You can only assign mentees to mentors within your own department.' });
+    }
+
+    // Optional: verification that oldMentorId is in the same department
+    if (req.user.role === 'hod') {
+      const oldMentor = await User.findById(oldMentorId);
+      if (oldMentor && oldMentor.department !== req.user.department) {
+        return res.status(403).json({ message: 'Cannot reassign students from a mentor outside your department.' });
+      }
+    }
+
+    await Student.updateMany(
+      { currentMentor: oldMentorId },
+      { $set: { currentMentor: newMentorId } }
+    );
+
+    res.status(200).json({ message: 'Students successfully reassigned to the new mentor.' });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }

@@ -20,9 +20,7 @@ function ActivityLogSection({ studentId }) {
   const [semesterFilter, setSemesterFilter] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const [form] = Form.useForm();
 
   const loadActivities = async () => {
     try {
@@ -47,42 +45,7 @@ function ActivityLogSection({ studentId }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [studentId, semesterFilter, categoryFilter]);
 
-  const handleSubmit = async (values) => {
-    setSaving(true);
-    setError('');
-    try {
-      const body = {
-        studentId,
-        semester: values.semester.trim(),
-        date: values.date.format('YYYY-MM-DD'),
-        category: values.category,
-        title: values.title.trim(),
-        notes: values.notes?.trim() || ''
-      };
-      const res = await api.post('/activity-logs', body);
-      toast.success('Activity added successfully');
-      form.resetFields();
-      form.setFieldsValue({ category: 'Conference' });
-      setActivities(prev => [...prev, res.data]);
-    } catch (e) {
-      const msg = e?.response?.data?.message || 'Failed to add activity';
-      setError(msg);
-      toast.error(msg);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleDelete = async (id) => {
-    try {
-      await api.delete(`/activity-logs/${id}`);
-      setActivities(prev => prev.filter(a => a._id !== id));
-      toast.success('Activity deleted');
-    } catch (e) {
-      const msg = e?.response?.data?.message || 'Failed to delete activity';
-      toast.error(msg);
-    }
-  };
+  // Editing/Adding disabled for Admin
 
   const columns = [
     { title: 'Sem', dataIndex: 'semester', key: 'semester', width: 80 },
@@ -90,17 +53,7 @@ function ActivityLogSection({ studentId }) {
     { title: 'Category', dataIndex: 'category', key: 'category', width: 150, render: text => <Text code>{text}</Text> },
     { title: 'Title', dataIndex: 'title', key: 'title' },
     { title: 'Notes', dataIndex: 'notes', key: 'notes' },
-    { title: 'By', dataIndex: ['mentorId', 'name'], key: 'mentorId', render: text => text || '-' },
-    {
-      title: 'Action',
-      key: 'action',
-      width: 80,
-      render: (_, record) => (
-        <Popconfirm title="Delete this activity?" onConfirm={() => handleDelete(record._id)} okText="Yes" cancelText="No">
-          <Button type="primary" danger icon={<DeleteOutlined />} size="small" />
-        </Popconfirm>
-      )
-    }
+    { title: 'By', dataIndex: ['mentorId', 'name'], key: 'mentorId', render: text => text || '-' }
   ];
 
   return (
@@ -135,59 +88,9 @@ function ActivityLogSection({ studentId }) {
             {CATEGORY_OPTIONS.map(c => <Option key={c} value={c}>{c}</Option>)}
           </Select>
         </div>
+
+
       </div>
-
-      <Card size="small" style={{ background: '#f8fafc', borderRadius: 8, borderColor: '#e2e8f0', marginBottom: 24 }}>
-        <Title level={5} style={{ marginBottom: 16, color: '#0f172a' }}>Add Activity</Title>
-        
-        {error && <Alert title={error} type="error" showIcon style={{ marginBottom: 16 }} />}
-
-        <Form 
-          form={form} 
-          layout="vertical" 
-          onFinish={handleSubmit}
-          initialValues={{ category: 'Conference' }}
-        >
-          <Row gutter={16}>
-            <Col xs={24} sm={8}>
-              <Form.Item label="Semester" name="semester" rules={[{ required: true }]}>
-                <Input placeholder="Sem 1 / 1 / I" />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={8}>
-              <Form.Item label="Date" name="date" rules={[{ required: true }]}>
-                <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={8}>
-              <Form.Item label="Category" name="category" rules={[{ required: true }]}>
-                <Select>
-                  {CATEGORY_OPTIONS.map(c => <Option key={c} value={c}>{c}</Option>)}
-                </Select>
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Row gutter={16}>
-            <Col xs={24} sm={12}>
-              <Form.Item label="Title / Description" name="title" rules={[{ required: true }]}>
-                <TextArea rows={2} />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12}>
-              <Form.Item label="Notes" name="notes">
-                <TextArea rows={2} />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Form.Item style={{ marginBottom: 0 }}>
-            <Button type="primary" htmlType="submit" loading={saving} style={{ background: '#0ea5e9', borderColor: '#0ea5e9' }}>
-              Add Activity
-            </Button>
-          </Form.Item>
-        </Form>
-      </Card>
 
       <Title level={5} style={{ marginBottom: 16, color: '#0f172a' }}>Logged Activities</Title>
       <Table 

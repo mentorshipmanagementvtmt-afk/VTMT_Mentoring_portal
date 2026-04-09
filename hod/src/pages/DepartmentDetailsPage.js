@@ -2,11 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useParams, Link } from 'react-router-dom';
 import api from 'api';
-import { Row, Col, Card, Typography, Spin, Alert, Button, Tag, Avatar, Table } from 'antd';
-import { ArrowLeftOutlined, UserOutlined, EditOutlined, DeleteOutlined, TeamOutlined } from '@ant-design/icons';
+import { Row, Col, Card, Typography, Spin, Alert, Button, Tag, Avatar, Table, Modal, Form, Select } from 'antd';
+import { ArrowLeftOutlined, UserOutlined, EditOutlined, DeleteOutlined, TeamOutlined, SwapOutlined } from '@ant-design/icons';
 import { useAuth } from '../context/AuthContext';
 
 const { Title, Text } = Typography;
+const { Option } = Select;
 
 function DepartmentDetailsPage() {
   const { deptName } = useParams();
@@ -16,6 +17,11 @@ function DepartmentDetailsPage() {
   const [leaderboard, setLeaderboard] = useState([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState(null);
+  
+  const [isReassignModalVisible, setIsReassignModalVisible] = useState(false);
+  const [reassignLoading, setReassignLoading] = useState(false);
+  const [reassignSourceMentor, setReassignSourceMentor] = useState(null);
+  const [form] = Form.useForm();
 
   const fetchData = async () => {
     setLoading(true);
@@ -57,6 +63,45 @@ function DepartmentDetailsPage() {
       toast.error(err.response?.data?.message || 'Failed to delete faculty.');
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  const showReassignModal = (mentor, e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    setReassignSourceMentor(mentor);
+    setIsReassignModalVisible(true);
+    form.resetFields();
+  };
+
+  const handleReassignCancel = () => {
+    setIsReassignModalVisible(false);
+    setReassignSourceMentor(null);
+  };
+
+  const handleReassignSubmit = async (values) => {
+    if (values.newMentorId === reassignSourceMentor._id) {
+      toast.error("Source and destination faculty cannot be the same.");
+      return;
+    }
+    
+    setReassignLoading(true);
+    try {
+      await api.put('/students/reassign-mentor-bulk', {
+        oldMentorId: reassignSourceMentor._id,
+        newMentorId: values.newMentorId
+      });
+      toast.success('Students successfully reassigned to the new faculty.');
+      setIsReassignModalVisible(false);
+      setReassignSourceMentor(null);
+      // Optional: Refetch data if needed
+      fetchData();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to reassign students.');
+    } finally {
+      setReassignLoading(false);
     }
   };
 
@@ -203,23 +248,34 @@ function DepartmentDetailsPage() {
                            View Mentees
                          </Button>
                        </Link>
+                       <Button 
+                         block 
+                         type="default" 
+                         icon={<SwapOutlined />} 
+                         onClick={(e) => showReassignModal(mentor, e)}
+                         style={{ color: '#10b981', borderColor: '#10b981', fontWeight: 600 }}
+                       >
+                         Reassign Mentees
+                       </Button>
                        <div style={{ display: 'flex', gap: 8 }}>
                          <Link to={`/mentor/${mentor._id}/edit`} style={{ flex: 1 }}>
                            <Button block type="default" icon={<EditOutlined />} style={{ borderColor: '#f59e0b', color: '#f59e0b', fontWeight: 500 }}>
                              Edit
                            </Button>
                          </Link>
-                         <Button 
-                           flex={1}
-                           danger 
-                           type="primary" 
-                           onClick={(e) => handleDeleteMentor(mentor._id, mentor.name, e)}
-                           loading={deletingId === mentor._id}
-                           icon={<DeleteOutlined />}
-                           style={{ fontWeight: 500 }}
-                         >
-                           Delete
-                         </Button>
+                          <div style={{ flex: 1 }}>
+                            <Button 
+                              block
+                              danger 
+                              type="primary" 
+                              onClick={(e) => handleDeleteMentor(mentor._id, mentor.name, e)}
+                              loading={deletingId === mentor._id}
+                              icon={<DeleteOutlined />}
+                              style={{ fontWeight: 500 }}
+                            >
+                              Delete
+                            </Button>
+                          </div>
                        </div>
                      </div>
                    </Card>
@@ -230,6 +286,42 @@ function DepartmentDetailsPage() {
         </div>
 
       </div>
+
+      <Modal
+        title="Reassign Mentees"
+        open={isReassignModalVisible}
+        onCancel={handleReassignCancel}
+        footer={null}
+      >
+        <div style={{ marginBottom: 16 }}>
+          <Text type="secondary">
+            Use this to reassign all mentees from <Text strong>{reassignSourceMentor?.name}</Text> to another faculty member within the department.
+          </Text>
+        </div>
+        <Form form={form} layout="vertical" onFinish={handleReassignSubmit}>
+          <Form.Item 
+            name="newMentorId" 
+            label="To Faculty (New)" 
+            rules={[{ required: true, message: 'Please select the destination faculty' }]}
+          >
+            <Select placeholder="Select faculty to move TO" showSearch>
+              {mentors.filter(m => m._id !== reassignSourceMentor?._id).map(mentor => (
+                <Option key={mentor._id} value={mentor._id}>{mentor.name} ({mentor.mtsNumber})</Option>
+              ))}
+            </Select>
+          </Form.Item>
+          
+          <Form.Item style={{ textAlign: 'right', marginTop: 32, marginBottom: 0 }}>
+            <Button onClick={handleReassignCancel} style={{ marginRight: 8 }}>
+              Cancel
+            </Button>
+            <Button type="primary" htmlType="submit" loading={reassignLoading} style={{ background: '#10b981', borderColor: '#10b981' }}>
+              Reassign Now
+            </Button>
+          </Form.Item>
+        </Form>
+      </Modal>
+
     </div>
   );
 }

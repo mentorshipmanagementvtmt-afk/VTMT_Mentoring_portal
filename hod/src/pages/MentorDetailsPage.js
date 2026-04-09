@@ -90,11 +90,6 @@ function MentorDetailsPage() {
                 View Mentees
               </Button>
             </Link>
-            <Link to={`/mentor/${mentor._id}/edit`}>
-              <Button type="default" size="large" icon={<EditOutlined />} style={{ borderRadius: 8, borderColor: '#f59e0b', color: '#f59e0b', fontWeight: 500 }}>
-                Edit Faculty
-              </Button>
-            </Link>
           </div>
         </Card>
       </div>
