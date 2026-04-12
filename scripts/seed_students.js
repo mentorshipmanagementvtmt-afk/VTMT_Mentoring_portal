@@ -8,7 +8,7 @@
 
 const mongoose = require('mongoose');
 const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '..', 'backend', '.env') });
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 // --- Models (inline to avoid path issues) ---
 const Schema = mongoose.Schema;
