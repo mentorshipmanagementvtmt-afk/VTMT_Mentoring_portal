@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link , useNavigate } from 'react-router-dom';
-import { Card, Typography, Row, Col } from 'antd';
+import { Card, Typography, Row, Col, Button } from 'antd';
 import { ArrowLeftOutlined, BankOutlined } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
@@ -15,6 +15,7 @@ const DEPARTMENTS = [
 ];
 
 function ManageDepartmentsPage() {
+  const navigate = useNavigate();
   return (
     <div style={{ minHeight: '100vh', background: '#f8fafc', padding: '32px 16px' }}>
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
