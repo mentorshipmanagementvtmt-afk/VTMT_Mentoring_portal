@@ -12,29 +12,35 @@ const rateLimit = require('express-rate-limit');
 dotenv.config();
 
 const app = express();
-app.set('trust proxy', 1); // Trust first proxy to allow secure cookies over HTTPS in Vercel
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 5000;
 
-const corsOptions = {
-  origin: [
-    'https://veltech-mentoring-portal.vercel.app', 
-    'http://localhost:3000', 
-    'http://localhost:3001', 
-    'http://localhost:3002', 
-    'http://localhost:3003',
-    process.env.FRONTEND_URL,
-    process.env.ADMIN_URL,
-    process.env.HOD_URL,
-    process.env.MENTOR_URL
-  ].filter(Boolean),
-  credentials: true
-};
+// --------------------------------------------------
+// 1. CORS
+// --------------------------------------------------
+const allowedOrigins = [
+  'https://veltech-mentoring-portal.vercel.app', 
+  'http://localhost:3000', 
+  'http://localhost:3001', 
+  'http://localhost:3002', 
+  'http://localhost:3003',
+  process.env.FRONTEND_URL,
+  process.env.ADMIN_URL,
+  process.env.HOD_URL,
+  process.env.MENTOR_URL
+].filter(Boolean);
 
-app.use(cors(corsOptions));
+app.use(cors({ origin: allowedOrigins, credentials: true }));
+
+// --------------------------------------------------
+// 2. Body Parsing + Cookie Parsing
+// --------------------------------------------------
 app.use(express.json());
+app.use(cookieParser());
 
-// Security Middlewares - Customized CSP for Ant Design + Cloudinary + Google Fonts
-const allowedOrigins = corsOptions.origin;
+// --------------------------------------------------
+// 3. Security Middlewares
+// --------------------------------------------------
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -48,23 +54,53 @@ app.use(helmet({
   },
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
-app.use(cookieParser());
 
-// Sanitize data to prevent NoSQL Inject & XSS
 app.use(mongoSanitize());
 app.use(xss());
 
-// Rate Limiting
+// Rate Limiting: 300 requests per 15 minutes per IP
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 300, // limit each IP to 300 requests per windowMs
+  windowMs: 15 * 60 * 1000,
+  max: 300,
   message: 'Too many requests from this IP, please try again later.',
   standardHeaders: true,
   legacyHeaders: false
 });
 app.use('/api', limiter);
 
-// CSRF Protection
+// --------------------------------------------------
+// 4. Database Connection (MUST be before routes)
+// --------------------------------------------------
+const connectDB = async () => {
+  if (mongoose.connection.readyState >= 1) return;
+  const dbUrl = process.env.DATABASE_URL;
+  await mongoose.connect(dbUrl, { 
+    family: 4,
+    serverSelectionTimeoutMS: 5000
+  });
+  console.log('✅ MongoDB connected successfully!');
+};
+
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    console.error('❌ DB connection error:', error.message);
+    return res.status(500).json({ message: 'Database connection failed.', error: error.message });
+  }
+});
+
+// --------------------------------------------------
+// 5. Health Check (before CSRF so it always works)
+// --------------------------------------------------
+app.get('/', (req, res) => {
+  res.send('Mentoring Portal API is running!');
+});
+
+// --------------------------------------------------
+// 6. CSRF Protection (after cookie-parser, before API routes)
+// --------------------------------------------------
 const csrfProtection = csrf({ 
   cookie: {
     httpOnly: true,
@@ -78,6 +114,9 @@ app.get('/api/csrf-token', (req, res) => {
   res.json({ csrfToken: req.csrfToken() });
 });
 
+// --------------------------------------------------
+// 7. API Routes
+// --------------------------------------------------
 const userRoutes = require('./routes/user.routes.js');
 const studentRoutes = require('./routes/student.routes.js');
 const assessmentRoutes = require('./routes/assessment.routes.js');
@@ -96,36 +135,21 @@ app.use('/api/activity-logs', activityLogRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/attendance', attendanceRoutes);
 
-const connectDB = async () => {
-  if (mongoose.connection.readyState >= 1) return;
-  try {
-    const dbUrl = process.env.DATABASE_URL;
-    // family: 4 forces IPv4, bypassing the known Render/Node issue with DNS SRV lookups (ENOTFOUND)
-    await mongoose.connect(dbUrl, { 
-      family: 4,
-      serverSelectionTimeoutMS: 5000 // fail fast in 5s if IP is blocked, instead of 30s
-    });
-    console.log('✅ MongoDB connected successfully!');
-  } catch (error) {
-    console.error('❌ Error connecting to MongoDB:', error.message);
-    throw new Error('Database connection failed');
+// --------------------------------------------------
+// 8. Global Error Handler (catches unhandled crashes)
+// --------------------------------------------------
+app.use((err, req, res, next) => {
+  console.error('💥 Unhandled Error:', err.message);
+  // CSRF token errors
+  if (err.code === 'EBADCSRFTOKEN') {
+    return res.status(403).json({ message: 'Invalid or missing CSRF token. Please refresh and try again.' });
   }
-};
-
-// Ensure DB is connected for serverless function invocations
-app.use(async (req, res, next) => {
-  try {
-    await connectDB();
-    next();
-  } catch (error) {
-    return res.status(500).json({ message: 'Database connection failed. Ensure MongoDB Atlas IP Network Access allows Vercel.', error: error.message });
-  }
+  res.status(err.status || 500).json({ message: err.message || 'Internal Server Error' });
 });
 
-app.get('/', (req, res) => {
-  res.send('Mentoring Portal API is running!');
-});
-
+// --------------------------------------------------
+// 9. Start Server (local dev only)
+// --------------------------------------------------
 if (process.env.NODE_ENV !== 'production') {
   app.listen(PORT, () => {
     console.log(`🚀 Server is running on http://localhost:${PORT}`);
