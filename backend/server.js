@@ -55,7 +55,6 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 
-app.use(mongoSanitize());
 app.use(xss());
 
 // Rate Limiting: 300 requests per 15 minutes per IP
