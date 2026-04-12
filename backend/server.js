@@ -5,6 +5,9 @@ const cookieParser = require('cookie-parser');
 const csrf = require('csurf');
 const dotenv = require('dotenv');
 const cors = require('cors');
+const mongoSanitize = require('express-mongo-sanitize');
+const xss = require('xss-clean');
+const rateLimit = require('express-rate-limit');
 
 dotenv.config();
 
@@ -33,6 +36,20 @@ app.use(express.json());
 // Security Middlewares
 app.use(helmet()); 
 app.use(cookieParser());
+
+// Sanitize data to prevent NoSQL Inject & XSS
+app.use(mongoSanitize());
+app.use(xss());
+
+// Rate Limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 300, // limit each IP to 300 requests per windowMs
+  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false
+});
+app.use('/api', limiter);
 
 // CSRF Protection
 const csrfProtection = csrf({ 
@@ -71,20 +88,25 @@ const connectDB = async () => {
   try {
     const dbUrl = process.env.DATABASE_URL;
     // family: 4 forces IPv4, bypassing the known Render/Node issue with DNS SRV lookups (ENOTFOUND)
-    await mongoose.connect(dbUrl, { family: 4 });
+    await mongoose.connect(dbUrl, { 
+      family: 4,
+      serverSelectionTimeoutMS: 5000 // fail fast in 5s if IP is blocked, instead of 30s
+    });
     console.log('✅ MongoDB connected successfully!');
   } catch (error) {
     console.error('❌ Error connecting to MongoDB:', error.message);
-    if (process.env.NODE_ENV !== 'production') {
-      process.exit(1);
-    }
+    throw new Error('Database connection failed');
   }
 };
 
 // Ensure DB is connected for serverless function invocations
 app.use(async (req, res, next) => {
-  await connectDB();
-  next();
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    return res.status(500).json({ message: 'Database connection failed. Ensure MongoDB Atlas IP Network Access allows Vercel.', error: error.message });
+  }
 });
 
 app.get('/', (req, res) => {
