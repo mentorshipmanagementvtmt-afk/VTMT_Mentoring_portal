@@ -12,7 +12,17 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 const corsOptions = {
-  origin: ['https://veltech-mentoring-portal.vercel.app', 'http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002', 'http://localhost:3003'],
+  origin: [
+    'https://veltech-mentoring-portal.vercel.app', 
+    'http://localhost:3000', 
+    'http://localhost:3001', 
+    'http://localhost:3002', 
+    'http://localhost:3003',
+    process.env.FRONTEND_URL,
+    process.env.ADMIN_URL,
+    process.env.HOD_URL,
+    process.env.MENTOR_URL
+  ].filter(Boolean),
   credentials: true
 };
 
@@ -50,6 +60,7 @@ app.use('/api/analytics', analyticsRoutes);
 app.use('/api/attendance', attendanceRoutes);
 
 const connectDB = async () => {
+  if (mongoose.connection.readyState >= 1) return;
   try {
     const dbUrl = process.env.DATABASE_URL;
     // family: 4 forces IPv4, bypassing the known Render/Node issue with DNS SRV lookups (ENOTFOUND)
@@ -57,19 +68,27 @@ const connectDB = async () => {
     console.log('✅ MongoDB connected successfully!');
   } catch (error) {
     console.error('❌ Error connecting to MongoDB:', error.message);
-    process.exit(1);
+    if (process.env.NODE_ENV !== 'production') {
+      process.exit(1);
+    }
   }
 };
+
+// Ensure DB is connected for serverless function invocations
+app.use(async (req, res, next) => {
+  await connectDB();
+  next();
+});
 
 app.get('/', (req, res) => {
   res.send('Mentoring Portal API is running!');
 });
 
-const startServer = async () => {
-  await connectDB();
+if (process.env.NODE_ENV !== 'production') {
   app.listen(PORT, () => {
     console.log(`🚀 Server is running on http://localhost:${PORT}`);
   });
-};
+}
 
-startServer();
+// Export the Express API for Vercel Serverless Functions
+module.exports = app;
