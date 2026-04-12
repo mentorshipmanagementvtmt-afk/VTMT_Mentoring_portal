@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link , useNavigate } from 'react-router-dom';
 import { Card, Typography, Row, Col } from 'antd';
 import { ArrowLeftOutlined, BankOutlined } from '@ant-design/icons';
 
@@ -18,9 +18,9 @@ function ManageDepartmentsPage() {
   return (
     <div style={{ minHeight: '100vh', background: '#f8fafc', padding: '32px 16px' }}>
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-        <Link to="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24, fontSize: 16, color: '#0ea5e9', textDecoration: 'none', fontWeight: 500 }}>
-          <ArrowLeftOutlined /> Back to Dashboard
-        </Link>
+        <Button type="link" onClick={() => navigate(-1)} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24, fontSize: 16, color: '#0ea5e9', fontWeight: 500, padding: 0 }}>
+          <ArrowLeftOutlined /> Back
+        </Button>
         
         <Title level={3} style={{ marginBottom: 32, color: '#0f172a' }}>Manage Departments</Title>
 

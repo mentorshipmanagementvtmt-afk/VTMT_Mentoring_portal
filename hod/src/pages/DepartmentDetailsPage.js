@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link , useNavigate } from 'react-router-dom';
 import api from 'api';
 import { Row, Col, Card, Typography, Spin, Alert, Button, Tag, Avatar, Table, Modal, Form, Select } from 'antd';
 import { ArrowLeftOutlined, UserOutlined, EditOutlined, DeleteOutlined, TeamOutlined, SwapOutlined } from '@ant-design/icons';
@@ -10,6 +10,7 @@ const { Title, Text } = Typography;
 const { Option } = Select;
 
 function DepartmentDetailsPage() {
+  const navigate = useNavigate();
   const { deptName } = useParams();
   const { user } = useAuth();
   const [hod, setHod] = useState(null);
@@ -150,9 +151,7 @@ function DepartmentDetailsPage() {
   return (
     <div style={{ minHeight: '100vh', background: '#f8fafc', padding: '32px 16px' }}>
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-        <Link to={user?.role === 'admin' ? "/departments" : "/dashboard"} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24, fontSize: 16, color: '#0ea5e9', textDecoration: 'none', fontWeight: 500 }}>
-          <ArrowLeftOutlined /> Back to {user?.role === 'admin' ? "Departments" : "Dashboard"}
-        </Link>
+        <Button type="link" onClick={() => navigate(-1)} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24, fontSize: 16, color: '#0ea5e9', fontWeight: 500, padding: 0 }}><ArrowLeftOutlined /> Back</Button>
         
         <Title level={2} style={{ margin: 0, color: '#0f172a' }}>{deptName} Department</Title>
         <Text type="secondary" style={{ display: 'block', marginBottom: 32 }}>Faculty & HOD Directory</Text>

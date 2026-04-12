@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
-import { Link } from 'react-router-dom';
+import { Link , useNavigate } from 'react-router-dom';
 import api from '../api';
 import { Card, Table, Typography, Spin, Tag, Space, Alert, Avatar, Tabs } from 'antd';
 import { ArrowLeftOutlined, WarningOutlined, FileDoneOutlined, UserOutlined } from '@ant-design/icons';
@@ -9,6 +9,7 @@ import dayjs from 'dayjs';
 const { Title, Text } = Typography;
 
 function AttendanceMonitorPage() {
+  const navigate = useNavigate();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -129,9 +130,9 @@ function AttendanceMonitorPage() {
   return (
     <div style={{ minHeight: '100vh', background: '#f8fafc', padding: '32px 16px' }}>
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-        <Link to="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24, fontSize: 16, color: '#0ea5e9', textDecoration: 'none', fontWeight: 500 }}>
-          <ArrowLeftOutlined /> Back to Dashboard
-        </Link>
+        <Button type="link" onClick={() => navigate(-1)} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24, fontSize: 16, color: '#0ea5e9', fontWeight: 500, padding: 0 }}>
+          <ArrowLeftOutlined /> Back
+        </Button>
         
         <Title level={2} style={{ margin: '0 0 8px 0', color: '#0f172a' }}>Faculty Attendance Monitoring</Title>
         <Text type="secondary" style={{ display: 'block', marginBottom: 24, fontSize: 16 }}>

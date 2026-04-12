@@ -91,7 +91,7 @@ router.post('/', protect, isAdminOrHod, upload.single('profileImage'), async (re
 // -----------------------------------------------------------
 router.get('/', protect, isAdminOrHod, async (req, res) => {
   try {
-    const { department, batch, section } = req.query;
+    const { department, batch, section, page = 1, limit = 50 } = req.query;
     const user = req.user;
     
     let filter = {};
@@ -106,11 +106,26 @@ router.get('/', protect, isAdminOrHod, async (req, res) => {
     if (batch) filter.batch = batch;
     if (section) filter.section = section;
 
-    const students = await Student.find(filter)
-      .select('name registerNumber vmNumber department batch section currentMentor')
-      .populate('currentMentor', 'name mtsNumber');
+    const pageNum = parseInt(page, 10);
+    const limitNum = parseInt(limit, 10);
+    const skip = (pageNum - 1) * limitNum;
+
+    const [students, total] = await Promise.all([
+      Student.find(filter)
+        .select('name registerNumber vmNumber department batch section currentMentor')
+        .populate('currentMentor', 'name mtsNumber')
+        .sort({ registerNumber: 1 })
+        .skip(skip)
+        .limit(limitNum),
+      Student.countDocuments(filter)
+    ]);
       
-    res.status(200).json(students);
+    res.status(200).json({ 
+      students, 
+      total, 
+      page: pageNum, 
+      pages: Math.ceil(total / limitNum) 
+    });
   } catch (error) {
     res.status(500).json({ message: 'Server error fetching students', error: error.message });
   }

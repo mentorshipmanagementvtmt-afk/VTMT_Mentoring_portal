@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link , useNavigate } from 'react-router-dom';
 import api from 'api';
 import { Card, Typography, Spin, Button,  Tag } from 'antd';
 import { ArrowLeftOutlined, EditOutlined, TeamOutlined } from '@ant-design/icons';
@@ -8,6 +8,7 @@ import { ArrowLeftOutlined, EditOutlined, TeamOutlined } from '@ant-design/icons
 const { Title, Text } = Typography;
 
 function MentorDetailsPage() {
+  const navigate = useNavigate();
   const { mentorId } = useParams();
   const [mentor, setMentor] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -46,9 +47,9 @@ function MentorDetailsPage() {
   return (
     <div style={{ minHeight: '100vh', background: '#f8fafc', padding: '32px 16px' }}>
       <div style={{ maxWidth: 800, margin: '0 auto' }}>
-        <Link to={`/departments/${mentor.department}`} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24, fontSize: 16, color: '#0ea5e9', textDecoration: 'none', fontWeight: 500 }}>
-          <ArrowLeftOutlined /> Back to {mentor.department} Department
-        </Link>
+        <Button type="link" onClick={() => navigate(-1)} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24, fontSize: 16, color: '#0ea5e9', fontWeight: 500, padding: 0 }}>
+          <ArrowLeftOutlined /> Back
+        </Button>
 
         <Card 
           variant="borderless" 

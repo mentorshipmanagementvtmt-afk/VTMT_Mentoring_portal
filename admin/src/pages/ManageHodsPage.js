@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import api from 'api';
-import { Link } from 'react-router-dom';
+import { Link , useNavigate } from 'react-router-dom';
 import { Card, Button, Typography, Popconfirm, Spin, Empty, Tag, Modal, Form, Select } from 'antd';
 import { ArrowLeftOutlined, SyncOutlined, PlusOutlined, SwapOutlined } from '@ant-design/icons';
 
@@ -9,6 +9,7 @@ const { Title, Text } = Typography;
 const { Option } = Select;
 
 function ManageHodsPage() {
+  const navigate = useNavigate();
   const [hods, setHods] = useState([]);
   const [loading, setLoading] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
@@ -116,9 +117,9 @@ function ManageHodsPage() {
   return (
     <div style={{ minHeight: '100vh', background: '#f8fafc', padding: '32px 16px' }}>
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-        <Link to="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24, fontSize: 16, color: '#0ea5e9', textDecoration: 'none', fontWeight: 500 }}>
-          <ArrowLeftOutlined /> Back to Dashboard
-        </Link>
+        <Button type="link" onClick={() => navigate(-1)} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24, fontSize: 16, color: '#0ea5e9', fontWeight: 500, padding: 0 }}>
+          <ArrowLeftOutlined /> Back
+        </Button>
 
         <Card 
           variant="borderless" 

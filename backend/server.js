@@ -33,8 +33,21 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
-// Security Middlewares
-app.use(helmet()); 
+// Security Middlewares - Customized CSP for Ant Design + Cloudinary + Google Fonts
+const allowedOrigins = corsOptions.origin;
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
+      imgSrc: ["'self'", "data:", "https://res.cloudinary.com", "blob:"],
+      connectSrc: ["'self'", ...allowedOrigins],
+    }
+  },
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 app.use(cookieParser());
 
 // Sanitize data to prevent NoSQL Inject & XSS

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link , useNavigate } from 'react-router-dom';
 import api from '../api';
 import { Card, Row, Col, Typography, Button, Spin, Avatar, Space, Tag, Descriptions, Divider } from 'antd';
 import { ArrowLeftOutlined, EditOutlined, ReadOutlined, WarningOutlined, CommentOutlined, FlagOutlined, DownloadOutlined } from '@ant-design/icons';
@@ -10,6 +10,7 @@ import { downloadStudentReport } from '../utils/reportGenerator';
 const { Title, Text } = Typography;
 
 function MenteeDetailsPage() {
+  const navigate = useNavigate();
   const { studentId } = useParams();
   const { user } = useAuth();
   const [student, setStudent] = useState(null);
@@ -42,9 +43,7 @@ function MenteeDetailsPage() {
   return (
     <div style={{ minHeight: '100vh', background: '#f8fafc', padding: '32px 16px' }}>
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-        <Link to={'/students'} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24, fontSize: 16, color: '#0ea5e9', textDecoration: 'none', fontWeight: 500 }}>
-          <ArrowLeftOutlined /> Back to Students
-        </Link>
+        <Button type="link" onClick={() => navigate(-1)} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24, fontSize: 16, color: '#0ea5e9', fontWeight: 500, padding: 0 }}><ArrowLeftOutlined /> Back</Button>
         <Card variant="borderless" style={{ borderRadius: 16, marginBottom: 24 }}>
           <Row gutter={24} align="middle">
              <Col>
