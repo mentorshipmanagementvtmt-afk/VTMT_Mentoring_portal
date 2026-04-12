@@ -9,6 +9,7 @@ const cors = require('cors');
 dotenv.config();
 
 const app = express();
+app.set('trust proxy', 1); // Trust first proxy to allow secure cookies over HTTPS in Vercel
 const PORT = process.env.PORT || 5000;
 
 const corsOptions = {
@@ -34,7 +35,13 @@ app.use(helmet());
 app.use(cookieParser());
 
 // CSRF Protection
-const csrfProtection = csrf({ cookie: true });
+const csrfProtection = csrf({ 
+  cookie: {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+  } 
+});
 app.use(csrfProtection);
 
 app.get('/api/csrf-token', (req, res) => {
