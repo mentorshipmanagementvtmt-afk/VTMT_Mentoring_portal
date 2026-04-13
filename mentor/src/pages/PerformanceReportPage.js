@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import api from 'api';
-import { Link , useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Card, Typography, Spin, Empty, List, Button } from 'antd';
 import { ArrowLeftOutlined, TrophyOutlined } from '@ant-design/icons';
 

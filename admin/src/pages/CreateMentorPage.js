@@ -2,12 +2,10 @@ import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import ProfileImageUpload from '../components/ProfileImageUpload';
 import api from 'api';
-import { Link, useNavigate } from 'react-router-dom';
-import { Card, Form, Input, Button, Row, Col, Typography,  Select } from 'antd';
+import { useNavigate } from 'react-router-dom';
+import { Card, Form, Input, Button, Row, Col, Select } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';
 import { useAuth } from '../context/AuthContext';
-
-const { Title } = Typography;
 
 function CreateMentorPage() {
   const { user } = useAuth();

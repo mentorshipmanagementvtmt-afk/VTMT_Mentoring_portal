@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { toast } from 'react-toastify';
 import api from 'api';
-import { Form, Input, InputNumber, Button, Row, Col, Typography,  Divider } from 'antd';
+import { Form, Input, InputNumber, Row, Col, Typography, Divider } from 'antd';
 
 const { Title } = Typography;
 
@@ -31,7 +31,6 @@ const flattenData = (data) => ({
 
 function AssessmentForm({ studentId, onAssessmentAdded, onCancel, assessmentToEdit = null }) {
   const [form] = Form.useForm();
-  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (assessmentToEdit) {
@@ -42,7 +41,6 @@ function AssessmentForm({ studentId, onAssessmentAdded, onCancel, assessmentToEd
   }, [assessmentToEdit, form]);
 
   const onFinish = async (values) => {
-    setSaving(true);
     try {
       const body = {
         studentId: studentId,
@@ -69,8 +67,6 @@ function AssessmentForm({ studentId, onAssessmentAdded, onCancel, assessmentToEd
       onAssessmentAdded();
     } catch (err) {
       toast.error('Failed to save assessment. Please check all fields.');
-    } finally {
-      setSaving(false);
     }
   };
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { useParams, Link , useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Typography, Button } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';
 import InterventionForm from '../components/InterventionForm';

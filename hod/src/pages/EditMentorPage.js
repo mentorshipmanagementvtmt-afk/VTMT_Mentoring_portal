@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import ProfileImageUpload from '../components/ProfileImageUpload';
 import api from 'api';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Card, Form, Input, Button, Row, Col, Typography, Spin, Avatar } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';
 import { useAuth } from '../context/AuthContext';

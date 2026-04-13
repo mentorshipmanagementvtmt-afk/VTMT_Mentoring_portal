@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-toastify';
-import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import { Card, Form, Input, Button, Upload, Typography, Spin, Avatar, Divider, Space } from 'antd';
-import { UserOutlined, UploadOutlined, CloudUploadOutlined, LockOutlined, MailOutlined, IdcardOutlined, BankOutlined, LoadingOutlined } from '@ant-design/icons';
+import { UserOutlined, CloudUploadOutlined, LockOutlined, MailOutlined, IdcardOutlined, BankOutlined, LoadingOutlined } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
 
@@ -16,13 +15,7 @@ function ProfilePage() {
   const [removeImage, setRemoveImage] = useState(false);
   const [previewImage, setPreviewImage] = useState('');
   
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    fetchProfile();
-  }, []);
-
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     try {
       const res = await api.get('/users/profile');
       setUser(res.data);
@@ -40,7 +33,11 @@ function ProfilePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [form]);
+
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
 
   const handleFileChange = ({ fileList: newFileList }) => {
     setFileList(newFileList);

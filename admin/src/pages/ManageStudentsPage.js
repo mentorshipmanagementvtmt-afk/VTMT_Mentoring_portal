@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { Link } from 'react-router-dom';
 import api from '../api';
-import { Card, Table, Typography, Button, Spin, Tag, Space, Input, Select } from 'antd';
+import { Card, Table, Typography, Button, Tag, Space, Select } from 'antd';
 import { EyeOutlined, SearchOutlined } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
@@ -93,7 +93,6 @@ function ManageStudentsPage() {
     }
   ];
 
-  const uniqueDepartments = [...new Set(students.map(s => s.department).filter(Boolean))];
   const uniqueBatches = [...new Set(students.map(s => s.batch).filter(Boolean))];
   const uniqueSections = [...new Set(students.map(s => s.section).filter(Boolean))];
 

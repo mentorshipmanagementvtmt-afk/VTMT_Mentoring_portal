@@ -14,8 +14,6 @@ function EditStudentPage() {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [profileImage, setProfileImage] = useState(null);
-  const [removeImage, setRemoveImage] = useState(false);
 
   useEffect(() => {
     const fetchStudent = async () => {

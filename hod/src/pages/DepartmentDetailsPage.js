@@ -15,7 +15,7 @@ function DepartmentDetailsPage() {
   const { user } = useAuth();
   const [hod, setHod] = useState(null);
   const [mentors, setMentors] = useState([]);
-  const [leaderboard, setLeaderboard] = useState([]);
+  const [leaderboard] = useState([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState(null);
   

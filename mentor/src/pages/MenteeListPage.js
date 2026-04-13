@@ -2,8 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-toastify';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../api';
-import { Card, Row, Col, Typography, Button, Spin, Empty, Popconfirm, Table, Tag, Space, Select } from 'antd';
-import { ArrowLeftOutlined, DeleteOutlined, EditOutlined, FolderOpenOutlined, DownloadOutlined } from '@ant-design/icons';
+import { Card, Typography, Button, Popconfirm, Table, Tag, Space, Select } from 'antd';
+import { ArrowLeftOutlined, DeleteOutlined, FolderOpenOutlined, DownloadOutlined } from '@ant-design/icons';
 import { downloadStudentReport } from '../utils/reportGenerator';
 
 const { Title, Text } = Typography;

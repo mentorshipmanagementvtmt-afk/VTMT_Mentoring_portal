@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Row, Col, Button, Typography, Card, Table, Spin, Alert, List } from 'antd';
-import { WarningOutlined, CompassOutlined } from '@ant-design/icons';
+import { Row, Col, Button, Typography, Card, Table, Spin, Alert } from 'antd';
+import { WarningOutlined } from '@ant-design/icons';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from 'recharts';
 import api from '../api';
 import { toast } from 'react-toastify';

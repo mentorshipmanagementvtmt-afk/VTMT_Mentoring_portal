@@ -1,14 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { toast } from 'react-toastify';
 import api from 'api';
-import { Form, Input, Button, Select, Typography,  Row, Col } from 'antd';
+import { Form, Input, Select, Typography, Row, Col } from 'antd';
 
 const { Title } = Typography;
 const { TextArea } = Input;
 
 function InterventionForm({ studentId, onInterventionAdded, onCancel, interventionToEdit = null }) {
   const [form] = Form.useForm();
-  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (interventionToEdit) {
@@ -24,7 +23,6 @@ function InterventionForm({ studentId, onInterventionAdded, onCancel, interventi
   }, [interventionToEdit, form]);
 
   const onFinish = async (values) => {
-    setSaving(true);
     try {
       const body = { ...values, studentId };
       if (interventionToEdit) {
@@ -40,8 +38,6 @@ function InterventionForm({ studentId, onInterventionAdded, onCancel, interventi
       }
     } catch (err) {
       toast.error('Failed to save intervention.');
-    } finally {
-      setSaving(false);
     }
   };
 

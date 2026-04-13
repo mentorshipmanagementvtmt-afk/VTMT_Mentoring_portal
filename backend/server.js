@@ -5,8 +5,6 @@ const cookieParser = require('cookie-parser');
 const csrf = require('csurf');
 const dotenv = require('dotenv');
 const cors = require('cors');
-const mongoSanitize = require('express-mongo-sanitize');
-const xss = require('xss-clean');
 const rateLimit = require('express-rate-limit');
 
 dotenv.config();
@@ -30,7 +28,39 @@ const allowedOrigins = [
   process.env.MENTOR_URL
 ].filter(Boolean);
 
-app.use(cors({ origin: allowedOrigins, credentials: true }));
+const allowedOriginSet = new Set(allowedOrigins);
+const isAllowedOrigin = (origin) => {
+  if (!origin) return true;
+
+  try {
+    const { protocol, hostname } = new URL(origin);
+    if (protocol !== 'https:' && protocol !== 'http:') {
+      return false;
+    }
+
+    if (allowedOriginSet.has(origin)) {
+      return true;
+    }
+
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return true;
+    }
+
+    return hostname.endsWith('.vercel.app');
+  } catch (error) {
+    return false;
+  }
+};
+
+app.use(cors({
+  origin(origin, callback) {
+    if (isAllowedOrigin(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true
+}));
 
 // --------------------------------------------------
 // 2. Body Parsing + Cookie Parsing
@@ -49,13 +79,11 @@ app.use(helmet({
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
       imgSrc: ["'self'", "data:", "https://res.cloudinary.com", "blob:"],
-      connectSrc: ["'self'", ...allowedOrigins],
+      connectSrc: ["'self'", ...allowedOrigins, "https://*.vercel.app"],
     }
   },
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
-
-app.use(xss());
 
 // Rate Limiting: 300 requests per 15 minutes per IP
 const limiter = rateLimit({

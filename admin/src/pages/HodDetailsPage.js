@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link , useNavigate } from 'react-router-dom';
 import api from 'api';
-import { Card, Typography, Row, Col, Spin, Empty, Button, Table, Tag } from 'antd';
+import { Card, Typography, Spin, Empty, Button, Table, Tag } from 'antd';
 import { ArrowLeftOutlined, MailOutlined, IdcardOutlined, BankOutlined, UserOutlined } from '@ant-design/icons';
 
 const { Title, Text } = Typography;

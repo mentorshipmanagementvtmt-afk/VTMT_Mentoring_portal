@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import api from 'api';
-import { Card, Typography, Button, Table, Form, Input, Select, DatePicker, Popconfirm,  Row, Col, Alert } from 'antd';
-import { DeleteOutlined, ReloadOutlined } from '@ant-design/icons';
+import { Card, Typography, Table, Input, Select } from 'antd';
+import { ReloadOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
-const { TextArea } = Input;
 
 const CATEGORY_OPTIONS = [
   'Conference', 'Journal Publication', 'Book Publication', 'Patent',
@@ -20,12 +19,10 @@ function ActivityLogSection({ studentId }) {
   const [semesterFilter, setSemesterFilter] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
 
   const loadActivities = async () => {
     try {
       setLoading(true);
-      setError('');
       const params = {};
       if (semesterFilter) params.semester = semesterFilter;
       if (categoryFilter) params.category = categoryFilter;
@@ -33,7 +30,6 @@ function ActivityLogSection({ studentId }) {
       setActivities(res.data || []);
     } catch (e) {
       const msg = e?.response?.data?.message || 'Failed to load activities';
-      setError(msg);
       toast.error(msg);
     } finally {
       setLoading(false);

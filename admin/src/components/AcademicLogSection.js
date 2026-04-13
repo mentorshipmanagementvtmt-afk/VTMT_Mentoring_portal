@@ -1,31 +1,26 @@
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import api from 'api';
-import { Card, Typography, Button, Table, Form, Input, Select, DatePicker, Space, Popconfirm,  Row, Col, Alert } from 'antd';
-import { DeleteOutlined, ReloadOutlined } from '@ant-design/icons';
+import { Card, Typography, Table, Input } from 'antd';
+import { ReloadOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
-const { Option } = Select;
-const { TextArea } = Input;
 
 function AcademicLogSection({ studentId }) {
   const [logs, setLogs] = useState([]);
   const [semesterFilter, setSemesterFilter] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
 
   const loadLogs = async () => {
     try {
       setLoading(true);
-      setError('');
       const params = {};
       if (semesterFilter) params.semester = semesterFilter;
       const res = await api.get(`/academic-logs/${studentId}`, { params });
       setLogs(res.data || []);
     } catch (e) {
       const msg = e?.response?.data?.message || 'Failed to load academic logs';
-      setError(msg);
       toast.error(msg);
     } finally {
       setLoading(false);
