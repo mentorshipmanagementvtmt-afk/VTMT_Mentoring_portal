@@ -1,60 +1,70 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-
-
-import LoginPage from './pages/LoginPage.js';
-import DashboardPage from './pages/DashboardPage.js';
 import ProtectedRoute from './components/ProtectedRoute.js';
-import MenteeListPage from './pages/MenteeListPage.js';
-import MenteeDetailsPage from './pages/MenteeDetailsPage.js';
-import EditStudentPage from './pages/EditStudentPage.js';
-import PerformanceReportPage from './pages/PerformanceReportPage.js';
-import ManageStudentsPage from './pages/ManageStudentsPage.js';
-import AssessmentLogPage from './pages/AssessmentLogPage.js';
-import InterventionLogPage from './pages/InterventionLogPage.js';
-import AcademicProblemsLogPage from './pages/AcademicProblemsLogPage.js';
-import ActivitiesLogPage from './pages/ActivitiesLogPage.js';
-import DepartmentDetailsPage from './pages/DepartmentDetailsPage.js';
-import MentorDetailsPage from './pages/MentorDetailsPage.js';
-import CreateMentorPage from './pages/CreateMentorPage.js';
-import CreateStudentPage from './pages/CreateStudentPage.js';
-import AttendanceMonitorPage from './pages/AttendanceMonitorPage.js';
-import ProfilePage from './pages/ProfilePage.js';
-import EditMentorPage from './pages/EditMentorPage.js';
-import MenteeAllocationPage from './pages/MenteeAllocationPage.js';
+
+
+const LoginPage = lazy(() => import('./pages/LoginPage.js'));
+const DashboardPage = lazy(() => import('./pages/DashboardPage.js'));
+const MenteeListPage = lazy(() => import('./pages/MenteeListPage.js'));
+const MenteeDetailsPage = lazy(() => import('./pages/MenteeDetailsPage.js'));
+const EditStudentPage = lazy(() => import('./pages/EditStudentPage.js'));
+const PerformanceReportPage = lazy(() => import('./pages/PerformanceReportPage.js'));
+const ManageStudentsPage = lazy(() => import('./pages/ManageStudentsPage.js'));
+const AssessmentLogPage = lazy(() => import('./pages/AssessmentLogPage.js'));
+const InterventionLogPage = lazy(() => import('./pages/InterventionLogPage.js'));
+const AcademicProblemsLogPage = lazy(() => import('./pages/AcademicProblemsLogPage.js'));
+const ActivitiesLogPage = lazy(() => import('./pages/ActivitiesLogPage.js'));
+const DepartmentDetailsPage = lazy(() => import('./pages/DepartmentDetailsPage.js'));
+const MentorDetailsPage = lazy(() => import('./pages/MentorDetailsPage.js'));
+const CreateMentorPage = lazy(() => import('./pages/CreateMentorPage.js'));
+const CreateStudentPage = lazy(() => import('./pages/CreateStudentPage.js'));
+const AttendanceMonitorPage = lazy(() => import('./pages/AttendanceMonitorPage.js'));
+const ProfilePage = lazy(() => import('./pages/ProfilePage.js'));
+const EditMentorPage = lazy(() => import('./pages/EditMentorPage.js'));
+const MenteeAllocationPage = lazy(() => import('./pages/MenteeAllocationPage.js'));
+
+function RouteLoadingFallback() {
+  return (
+    <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', background: '#f8fafc', color: '#475569' }}>
+      Loading...
+    </div>
+  );
+}
 function App() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
       <ToastContainer position="top-right" autoClose={3000} />
       <Router>
-        <Routes>
-          <Route path="/" element={<LoginPage />} />
+        <Suspense fallback={<RouteLoadingFallback />}>
+          <Routes>
+            <Route path="/" element={<LoginPage />} />
 
-          <Route element={<ProtectedRoute />}>
-            <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/attendance/monitor" element={<AttendanceMonitorPage />} />
-            <Route path="/departments/:deptName" element={<DepartmentDetailsPage />} />
-            <Route path="/mentors/create" element={<CreateMentorPage />} />
-            <Route path="/students/create" element={<CreateStudentPage />} />
-            <Route path="/mentor/:mentorId" element={<MentorDetailsPage />} />
-            <Route path="/mentor/:mentorId/mentees" element={<MenteeListPage />} />
-            <Route path="/mentee/:studentId" element={<MenteeDetailsPage />} />
-            <Route path="/mentee/:studentId/edit" element={<EditStudentPage />} />
-            <Route path="/performance" element={<PerformanceReportPage />} />
-            <Route path="/students" element={<ManageStudentsPage />} />
-            <Route path="/mentee/:studentId/assessments" element={<AssessmentLogPage />} />
-            <Route path="/mentee/:studentId/interventions" element={<InterventionLogPage />} />
-            <Route path="/mentee/:studentId/academic-problems" element={<AcademicProblemsLogPage />} />
-            <Route path="/mentee/:studentId/activities" element={<ActivitiesLogPage />} />
-            <Route path="/mentor/:mentorId/edit" element={<EditMentorPage />} />
-            <Route path="/mentee-allocation" element={<MenteeAllocationPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
-          </Route>
+            <Route element={<ProtectedRoute />}>
+              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/attendance/monitor" element={<AttendanceMonitorPage />} />
+              <Route path="/departments/:deptName" element={<DepartmentDetailsPage />} />
+              <Route path="/mentors/create" element={<CreateMentorPage />} />
+              <Route path="/students/create" element={<CreateStudentPage />} />
+              <Route path="/mentor/:mentorId" element={<MentorDetailsPage />} />
+              <Route path="/mentor/:mentorId/mentees" element={<MenteeListPage />} />
+              <Route path="/mentee/:studentId" element={<MenteeDetailsPage />} />
+              <Route path="/mentee/:studentId/edit" element={<EditStudentPage />} />
+              <Route path="/performance" element={<PerformanceReportPage />} />
+              <Route path="/students" element={<ManageStudentsPage />} />
+              <Route path="/mentee/:studentId/assessments" element={<AssessmentLogPage />} />
+              <Route path="/mentee/:studentId/interventions" element={<InterventionLogPage />} />
+              <Route path="/mentee/:studentId/academic-problems" element={<AcademicProblemsLogPage />} />
+              <Route path="/mentee/:studentId/activities" element={<ActivitiesLogPage />} />
+              <Route path="/mentor/:mentorId/edit" element={<EditMentorPage />} />
+              <Route path="/mentee-allocation" element={<MenteeAllocationPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+            </Route>
 
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
       </Router>
     </div>
   );
