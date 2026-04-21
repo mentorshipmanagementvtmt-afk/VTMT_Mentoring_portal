@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
-import api from 'api';
+import api from '../api';
 import { Link } from 'react-router-dom';
 import { Card, Button, Typography, Popconfirm, Spin, Empty, Tag, Modal, Form, Select } from 'antd';
 import { ArrowLeftOutlined, SyncOutlined, PlusOutlined, SwapOutlined } from '@ant-design/icons';

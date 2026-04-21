@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
-import api from 'api';
+import api from '../api';
 import { Link } from 'react-router-dom';
 import { Card, Typography, Spin, Empty, List } from 'antd';
 import { ArrowLeftOutlined, TrophyOutlined } from '@ant-design/icons';

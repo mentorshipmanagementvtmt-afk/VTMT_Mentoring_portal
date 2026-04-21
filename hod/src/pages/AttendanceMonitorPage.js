@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { Link } from 'react-router-dom';
 import api from '../api';
-import { Card, Table, Typography, Spin, Tag, Space, Alert, Avatar } from 'antd';
+import { Card, Table, Typography, Tag, Avatar, Tabs } from 'antd';
 import { ArrowLeftOutlined, WarningOutlined, FileDoneOutlined, UserOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 
@@ -10,6 +10,7 @@ const { Title, Text } = Typography;
 
 function AttendanceMonitorPage() {
   const [data, setData] = useState([]);
+  const [lowAttendanceStudents, setLowAttendanceStudents] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -18,8 +19,12 @@ function AttendanceMonitorPage() {
 
   const fetchMonitoringData = async () => {
     try {
-      const response = await api.get('/attendance/monitor');
-      setData(response.data);
+      const [monitorResponse, lowAttendanceResponse] = await Promise.all([
+        api.get('/attendance/monitor'),
+        api.get('/attendance/low-attendance-students')
+      ]);
+      setData(monitorResponse.data);
+      setLowAttendanceStudents(lowAttendanceResponse.data);
     } catch (err) {
       toast.error('Failed to load attendance monitoring data.');
     } finally {
@@ -35,14 +40,21 @@ function AttendanceMonitorPage() {
       render: (text, record) => (
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <Link to={`/mentor/${record.mentorId}`}>
-            <Avatar src={record.mentorProfileImage?.url || undefined} icon={!record.mentorProfileImage?.url && <UserOutlined />} size={42} style={{ cursor: 'pointer' }} />
+            <Avatar
+              src={record.mentorProfileImage?.url || undefined}
+              icon={!record.mentorProfileImage?.url && <UserOutlined />}
+              size={42}
+              style={{ cursor: 'pointer' }}
+            />
           </Link>
           <div>
             <Link to={`/mentor/${record.mentorId}`} style={{ textDecoration: 'none' }}>
               <Text strong style={{ color: '#0ea5e9' }}>{text}</Text>
             </Link>
-            <br/>
-            <Text type="secondary" style={{ fontSize: 12 }}>{record.mentorEmail} • {record.mentorMts || 'Faculty'} • {record.department}</Text>
+            <br />
+            <Text type="secondary" style={{ fontSize: 12 }}>
+              {record.mentorEmail} | {record.mentorMts || 'Faculty'} | {record.department}
+            </Text>
           </div>
         </div>
       ),
@@ -96,26 +108,100 @@ function AttendanceMonitorPage() {
     }
   ];
 
+  const lowAttendanceColumns = [
+    {
+      title: 'Student',
+      key: 'student',
+      render: (_, record) => (
+        <div>
+          <Text strong>{record.studentName}</Text>
+          <br />
+          <Text type="secondary" style={{ fontSize: 12 }}>Reg: {record.registerNumber}</Text>
+        </div>
+      )
+    },
+    {
+      title: 'Mentor Details',
+      key: 'mentor',
+      render: (_, record) =>
+        record.mentor ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Link to={`/mentor/${record.mentor.mentorId}`}>
+              <Avatar
+                src={record.mentor.profileImage?.url || undefined}
+                icon={!record.mentor.profileImage?.url && <UserOutlined />}
+                size="small"
+                style={{ cursor: 'pointer' }}
+              />
+            </Link>
+            <div>
+              <Link to={`/mentor/${record.mentor.mentorId}`} style={{ textDecoration: 'none' }}>
+                <Text style={{ color: '#0ea5e9' }}>{record.mentor.name}</Text>
+              </Link>
+              <br />
+              <Text type="secondary" style={{ fontSize: 12 }}>
+                {record.mentor.email} | {record.mentor.mtsNumber}
+              </Text>
+            </div>
+          </div>
+        ) : (
+          <Text type="secondary">Unassigned</Text>
+        )
+    },
+    {
+      title: 'Cumulative Attendance',
+      dataIndex: 'cumulativeAttendance',
+      key: 'cumulativeAttendance',
+      render: value => <Tag color="error">{value}%</Tag>,
+      sorter: (a, b) => a.cumulativeAttendance - b.cumulativeAttendance
+    }
+  ];
+
   return (
     <div style={{ minHeight: '100vh', background: '#f8fafc', padding: '32px 16px' }}>
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
         <Link to="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24, fontSize: 16, color: '#0ea5e9', textDecoration: 'none', fontWeight: 500 }}>
           <ArrowLeftOutlined /> Back to Dashboard
         </Link>
-        
+
         <Title level={2} style={{ margin: '0 0 8px 0', color: '#0f172a' }}>Faculty Attendance Monitoring</Title>
         <Text type="secondary" style={{ display: 'block', marginBottom: 24, fontSize: 16 }}>
-           Track faculty compliance in submitting weekly attendance logs for their mentees.
+          Track faculty compliance in submitting weekly attendance logs for their mentees.
         </Text>
 
-        <Card variant="borderless" styles={{ body: { padding: 0 } }} style={{ borderRadius: 12, border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.02)', overflow: 'hidden' }}>
-          <Table 
-            columns={columns} 
-            dataSource={data} 
-            rowKey="mentorId" 
-            loading={loading}
-            pagination={{ pageSize: 15 }}
-            locale={{ emptyText: 'No faculty records found.' }}
+        <Card variant="borderless" styles={{ body: { padding: 24 } }} style={{ borderRadius: 12, border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+          <Tabs
+            defaultActiveKey="1"
+            items={[
+              {
+                key: '1',
+                label: 'Compliance Monitor',
+                children: (
+                  <Table
+                    columns={columns}
+                    dataSource={data}
+                    rowKey="mentorId"
+                    loading={loading}
+                    pagination={{ pageSize: 15 }}
+                    locale={{ emptyText: 'No faculty records found.' }}
+                  />
+                )
+              },
+              {
+                key: '2',
+                label: 'Low Attendance Students',
+                children: (
+                  <Table
+                    columns={lowAttendanceColumns}
+                    dataSource={lowAttendanceStudents}
+                    rowKey="studentId"
+                    loading={loading}
+                    pagination={{ pageSize: 15 }}
+                    locale={{ emptyText: 'No students are currently below 75% attendance.' }}
+                  />
+                )
+              }
+            ]}
           />
         </Card>
       </div>

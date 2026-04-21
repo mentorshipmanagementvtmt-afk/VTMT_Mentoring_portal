@@ -17,6 +17,7 @@ import AcademicProblemsLogPage from './pages/AcademicProblemsLogPage.js';
 import ActivitiesLogPage from './pages/ActivitiesLogPage.js';
 import AttendanceLogPage from './pages/AttendanceLogPage.js';
 import ProfilePage from './pages/ProfilePage.js';
+import ExamMarksPage from './pages/ExamMarksPage.js';
 function App() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
@@ -36,6 +37,7 @@ function App() {
             <Route path="/mentee/:studentId/interventions" element={<InterventionLogPage />} />
             <Route path="/mentee/:studentId/academic-problems" element={<AcademicProblemsLogPage />} />
             <Route path="/mentee/:studentId/activities" element={<ActivitiesLogPage />} />
+            <Route path="/mentee/:studentId/exam-marks" element={<ExamMarksPage />} />
             <Route path="/profile" element={<ProfilePage />} />
           </Route>
 

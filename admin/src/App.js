@@ -23,6 +23,7 @@ import DepartmentDetailsPage from './pages/DepartmentDetailsPage.js';
 import MentorDetailsPage from './pages/MentorDetailsPage.js';
 import CreateMentorPage from './pages/CreateMentorPage.js';
 import AttendanceMonitorPage from './pages/AttendanceMonitorPage.js';
+import ExamPerformancePage from './pages/ExamPerformancePage.js';
 
 function App() {
   return (
@@ -47,6 +48,7 @@ function App() {
             <Route path="/mentee/:studentId/interventions" element={<InterventionLogPage />} />
             <Route path="/mentee/:studentId/academic-problems" element={<AcademicProblemsLogPage />} />
             <Route path="/mentee/:studentId/activities" element={<ActivitiesLogPage />} />
+            <Route path="/mentee/:studentId/exam-performance" element={<ExamPerformancePage />} />
             <Route path="/hods" element={<ManageHodsPage />} />
             <Route path="/hods/create" element={<CreateHodPage />} />
             <Route path="/hod/:id" element={<HodDetailsPage />} />

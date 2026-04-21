@@ -149,4 +149,65 @@ router.get('/monitor', protect, isAdminOrHod, async (req, res) => {
     }
 });
 
+// 4. Low attendance students with mentor details (Admin & HOD)
+router.get('/low-attendance-students', protect, isAdminOrHod, async (req, res) => {
+    try {
+        const studentQuery = {};
+        if (req.user.role === 'hod') {
+            studentQuery.department = req.user.department;
+        }
+
+        const students = await Student.find(studentQuery)
+            .select('_id name registerNumber department batch section currentMentor')
+            .populate('currentMentor', 'name email mtsNumber profileImage');
+
+        const lowAttendanceStudents = [];
+
+        for (const student of students) {
+            const records = await WeeklyAttendance.find({ studentId: student._id }).select('classesHeld classesAttended');
+            const totals = records.reduce(
+                (acc, item) => {
+                    acc.held += item.classesHeld || 0;
+                    acc.attended += item.classesAttended || 0;
+                    return acc;
+                },
+                { held: 0, attended: 0 }
+            );
+
+            if (!totals.held) {
+                continue;
+            }
+
+            const cumulativeAttendance = Number(((totals.attended / totals.held) * 100).toFixed(2));
+            if (cumulativeAttendance >= 75) {
+                continue;
+            }
+
+            lowAttendanceStudents.push({
+                studentId: student._id,
+                studentName: student.name,
+                registerNumber: student.registerNumber,
+                department: student.department,
+                batch: student.batch || '',
+                section: student.section || '',
+                cumulativeAttendance,
+                mentor: student.currentMentor
+                    ? {
+                        mentorId: student.currentMentor._id,
+                        name: student.currentMentor.name,
+                        email: student.currentMentor.email,
+                        mtsNumber: student.currentMentor.mtsNumber,
+                        profileImage: student.currentMentor.profileImage
+                    }
+                    : null
+            });
+        }
+
+        lowAttendanceStudents.sort((a, b) => a.cumulativeAttendance - b.cumulativeAttendance);
+        res.status(200).json(lowAttendanceStudents);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+});
+
 module.exports = router;

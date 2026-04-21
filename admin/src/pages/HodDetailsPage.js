@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import api from 'api';
+import api from '../api';
 import { Card, Typography, Row, Col, Spin, Empty, Button, Table, Tag } from 'antd';
 import { ArrowLeftOutlined, MailOutlined, IdcardOutlined, BankOutlined, UserOutlined } from '@ant-design/icons';
 

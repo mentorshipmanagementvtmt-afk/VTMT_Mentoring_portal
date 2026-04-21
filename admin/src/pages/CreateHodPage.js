@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import ProfileImageUpload from '../components/ProfileImageUpload';
-import api from 'api';
+import api from '../api';
 import { Link, useNavigate } from 'react-router-dom';
 import { Card, Form, Input, Button, Row, Col, Typography,  Select } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';

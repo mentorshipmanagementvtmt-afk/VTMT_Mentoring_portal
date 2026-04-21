@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
-import api from 'api';
+import api from '../api';
 import { Form, Input, Button, Select, Typography,  Row, Col } from 'antd';
 
 const { Title } = Typography;

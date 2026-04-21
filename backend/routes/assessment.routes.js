@@ -11,11 +11,15 @@ router.post('/', protect, async (req, res) => {
     const mentorId = req.user._id
     const { studentId, academicYear, ...rawData } = req.body
 
+    if (req.user.role !== 'mentor') {
+      return res.status(403).json({ message: 'Only mentors can enter or modify assessment data.' })
+    }
+
     const student = await Student.findById(studentId)
     if (!student) {
       return res.status(404).json({ message: 'Student not found.' })
     }
-    if (req.user.role !== 'hod' && !student.currentMentor.equals(mentorId)) {
+    if (!student.currentMentor.equals(mentorId)) {
       return res.status(403).json({ message: 'You are not authorized to edit this student.' })
     }
 
@@ -188,6 +192,20 @@ router.get('/report/:studentId', protect, async (req, res) => {
 router.get('/:studentId', protect, async (req, res) => {
   try {
     const { studentId } = req.params
+    const student = await Student.findById(studentId)
+    if (!student) {
+      return res.status(404).json({ message: 'Student not found.' })
+    }
+
+    if (req.user.role === 'mentor' && !student.currentMentor.equals(req.user._id)) {
+      return res.status(403).json({ message: 'You are not authorized to view this student.' })
+    }
+    if (req.user.role === 'hod' && student.department !== req.user.department) {
+      return res.status(403).json({ message: 'You can only view students in your department.' })
+    }
+    if (!['mentor', 'hod', 'admin'].includes(req.user.role)) {
+      return res.status(403).json({ message: 'Unauthorized role.' })
+    }
 
     const assessments = await Assessment.find({ studentId: studentId })
 
@@ -217,16 +235,11 @@ router.delete('/:assessmentId', protect, async (req, res) => {
       return res.status(404).json({ message: 'Associated student not found.' })
     }
 
-    if (user.role === 'mentor') {
-      if (!student.currentMentor.equals(user._id)) {
-        return res.status(403).json({ message: 'You are not authorized to delete this assessment.' })
-      }
-    } else if (user.role === 'hod') {
-      if (student.department !== user.department) {
-        return res.status(403).json({ message: 'You can only delete assessments for students in your department.' })
-      }
-    } else {
-      return res.status(403).json({ message: 'Only mentors or HOD can delete assessments.' })
+    if (user.role !== 'mentor') {
+      return res.status(403).json({ message: 'Only mentors can delete assessment records.' })
+    }
+    if (!student.currentMentor.equals(user._id)) {
+      return res.status(403).json({ message: 'You are not authorized to delete this assessment.' })
     }
 
     await Assessment.findByIdAndDelete(assessmentId)

@@ -90,22 +90,27 @@ function MenteeDetailsPage() {
         {/* Activity Buttons Matrix */}
         <Typography.Title level={4}>Student Activity Tracking</Typography.Title>
         <Row gutter={[16,16]} style={{ marginBottom: 32 }}>
-           <Col xs={12} md={6}>
+           <Col xs={12} md={8} lg={6}>
              <Link to={`/mentee/${student._id}/assessments`}>
                <Button block size="large" icon={<ReadOutlined />} style={{ height: 80, fontSize: 16 }}>Assessment Data</Button>
              </Link>
            </Col>
-           <Col xs={12} md={6}>
+           <Col xs={12} md={8} lg={6}>
+             <Link to={`/mentee/${student._id}/exam-marks`}>
+               <Button block size="large" icon={<ReadOutlined />} style={{ height: 80, fontSize: 16 }}>Exam Marks</Button>
+             </Link>
+           </Col>
+           <Col xs={12} md={8} lg={6}>
              <Link to={`/mentee/${student._id}/interventions`}>
                <Button block size="large" icon={<CommentOutlined />} style={{ height: 80, fontSize: 16 }}>Intervention Log</Button>
              </Link>
            </Col>
-           <Col xs={12} md={6}>
+           <Col xs={12} md={8} lg={6}>
              <Link to={`/mentee/${student._id}/academic-problems`}>
                <Button block size="large" icon={<WarningOutlined />} style={{ height: 80, fontSize: 16 }}>Academic Problems</Button>
              </Link>
            </Col>
-           <Col xs={12} md={6}>
+           <Col xs={12} md={8} lg={6}>
              <Link to={`/mentee/${student._id}/activities`}>
                <Button block size="large" icon={<FlagOutlined />} style={{ height: 80, fontSize: 16 }}>Co/Extracurricular</Button>
              </Link>

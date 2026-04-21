@@ -39,6 +39,7 @@ const academicLogRoutes = require('./routes/academicLog.routes.js');
 const activityLogRoutes = require('./routes/activityLog.routes.js');
 const analyticsRoutes = require('./routes/analytics.routes.js');
 const attendanceRoutes = require('./routes/attendance.routes.js');
+const examRecordRoutes = require('./routes/examRecord.routes.js');
 
 app.use('/api/users', userRoutes);
 app.use('/api/students', studentRoutes);
@@ -48,6 +49,7 @@ app.use('/api/academic-logs', academicLogRoutes);
 app.use('/api/activity-logs', activityLogRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/attendance', attendanceRoutes);
+app.use('/api/exam-records', examRecordRoutes);
 
 const connectDB = async () => {
   try {

@@ -24,6 +24,7 @@ import AttendanceMonitorPage from './pages/AttendanceMonitorPage.js';
 import ProfilePage from './pages/ProfilePage.js';
 import EditMentorPage from './pages/EditMentorPage.js';
 import MenteeAllocationPage from './pages/MenteeAllocationPage.js';
+import ExamPerformancePage from './pages/ExamPerformancePage.js';
 function App() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
@@ -48,6 +49,7 @@ function App() {
             <Route path="/mentee/:studentId/interventions" element={<InterventionLogPage />} />
             <Route path="/mentee/:studentId/academic-problems" element={<AcademicProblemsLogPage />} />
             <Route path="/mentee/:studentId/activities" element={<ActivitiesLogPage />} />
+            <Route path="/mentee/:studentId/exam-performance" element={<ExamPerformancePage />} />
             <Route path="/mentor/:mentorId/edit" element={<EditMentorPage />} />
             <Route path="/mentee-allocation" element={<MenteeAllocationPage />} />
             <Route path="/profile" element={<ProfilePage />} />

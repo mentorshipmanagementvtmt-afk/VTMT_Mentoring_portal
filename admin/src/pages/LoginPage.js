@@ -1,7 +1,7 @@
 // src/pages/LoginPage.js
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
-import api from 'api';
+import api from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Typography, Form, Input, Button, Card } from 'antd';

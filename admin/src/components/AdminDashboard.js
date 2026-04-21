@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Row, Col, Button, Typography, Card, Table, Spin, Alert, List } from 'antd';
-import { WarningOutlined, CompassOutlined } from '@ant-design/icons';
+import { Row, Col, Button, Typography, Card, Table, Spin, Alert } from 'antd';
+import { WarningOutlined } from '@ant-design/icons';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from 'recharts';
 import api from '../api';
 import { toast } from 'react-toastify';
@@ -126,6 +126,13 @@ function AdminDashboard() {
           <Link to="/students" style={{ display: 'block' }}>
             <Button block type="primary" style={{ background: '#8b5cf6', borderColor: '#8b5cf6', borderRadius: 8, height: 44, fontWeight: 500 }}>
                View Students
+            </Button>
+          </Link>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Link to="/attendance/monitor" style={{ display: 'block' }}>
+            <Button block type="primary" style={{ background: '#ef4444', borderColor: '#ef4444', borderRadius: 8, height: 44, fontWeight: 500 }}>
+              Low Attendance Monitor
             </Button>
           </Link>
         </Col>
