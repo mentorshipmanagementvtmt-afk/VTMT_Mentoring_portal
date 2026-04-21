@@ -27,9 +27,9 @@ function DashboardPage() {
   }
 
   return (
-    <Layout style={{ minHeight: '100vh', background: '#f8fafc' }}>
-      <Header role="banner" style={{ background: '#ffffff', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px', height: '64px' }}>
-        <Title level={4} style={{ margin: 0, color: '#0f172a' }}>Mentoring Portal</Title>
+    <Layout className="page-shell">
+      <Header role="banner" className="glass-topbar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px', height: '64px' }}>
+        <Title level={4} className="page-title" style={{ margin: 0 }}>Mentoring Portal</Title>
         <Space size="middle">
           <Tag color="blue" style={{ textTransform: 'uppercase', fontWeight: 600 }}>{user.role}</Tag>
           <Button type="default" icon={<LogoutOutlined />} onClick={handleLogout} className="flex items-center">
@@ -38,13 +38,13 @@ function DashboardPage() {
         </Space>
       </Header>
 
-      <Content role="main" aria-label="Dashboard Content" style={{ maxWidth: 1200, margin: '0 auto', width: '100%', padding: '24px 16px' }}>
+      <Content role="main" aria-label="Dashboard Content" className="page-container fade-in-up" style={{ padding: '24px 16px' }}>
         <div style={{ marginBottom: 24 }}>
-          <Title level={3} tabIndex={0} style={{ margin: 0, color: '#0f172a' }}>Welcome, {user.name}</Title>
+          <Title level={3} tabIndex={0} className="page-title" style={{ margin: 0 }}>Welcome, {user.name}</Title>
         </div>
 
         {/* Dynamic Dashboard Based on Role */}
-        <div style={{ background: '#ffffff', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
+        <div className="app-card" style={{ padding: '24px' }}>
           {user.role === 'admin' ? <AdminDashboard /> : <div>Access restricted to Admin.</div>}
         </div>
       </Content>

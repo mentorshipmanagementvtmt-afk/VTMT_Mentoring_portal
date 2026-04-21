@@ -1,13 +1,77 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap');
+
+:root {
+  --app-bg: #fbf8fa;
+  --surface: #ffffff;
+  --surface-soft: #f5f3f4;
+  --text: #1b1b1d;
+  --text-muted: #45474c;
+  --outline: #c5c6cd;
+  --primary: #4b41e1;
+  --primary-strong: #091426;
+  --danger: #ba1a1a;
+  --shadow-soft: 0 6px 24px rgba(9, 20, 38, 0.06);
+}
+
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-  background: #f8fafc;
-  color: #0f172a;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  background: var(--app-bg);
+  color: var(--text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 code { font-family: source-code-pro, Menlo, Monaco, Consolas, monospace; }
+
+.page-shell {
+  min-height: 100vh;
+  background: radial-gradient(circle at top right, #eef0ff 0, var(--app-bg) 40%);
+}
+
+.page-container {
+  max-width: 1220px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.glass-topbar {
+  background: rgba(255, 255, 255, 0.88) !important;
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--outline) !important;
+}
+
+.app-card {
+  background: var(--surface);
+  border: 1px solid var(--outline);
+  border-radius: 16px;
+  box-shadow: var(--shadow-soft);
+}
+
+.page-title {
+  font-family: 'Manrope', 'Inter', sans-serif;
+  letter-spacing: -0.01em;
+  color: var(--primary-strong);
+}
+
+.page-subtitle {
+  color: var(--text-muted);
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.45s ease;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 
 /* Global Background Classes used by the layout wraps */
 .login-page, .dash-wrap, .mlp, .mdp-wrap, .prp-wrap, .dash-wrap.loading, .mlp.loading, .mdp-wrap.loading, .prp-wrap.loading, .mlp.error, .mdp-wrap.error, .prp-wrap.error, .mdp-wrap.empty {

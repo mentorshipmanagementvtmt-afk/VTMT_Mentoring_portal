@@ -64,11 +64,11 @@ function AdminDashboard() {
   const colors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4', '#ec4899'];
 
   return (
-    <div>
+    <div className="fade-in-up">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', marginBottom: 20 }}>
         <div>
-          <Title level={4} style={{ marginBottom: 4, color: '#0f172a' }}>Admin Dashboard</Title>
-          <Text type="secondary" style={{ display: 'block' }}>
+          <Title level={4} className="page-title" style={{ marginBottom: 4 }}>Admin Dashboard</Title>
+          <Text className="page-subtitle" style={{ display: 'block' }}>
             System Administrator View & Analytics
           </Text>
         </div>
@@ -103,7 +103,7 @@ function AdminDashboard() {
       <Row gutter={[16, 16]} style={{ paddingBottom: 32, borderBottom: '1px solid #e2e8f0', marginBottom: 32 }}>
         <Col xs={24} sm={12} lg={6}>
           <Link to="/hods" style={{ display: 'block' }}>
-            <Button block type="primary" style={{ background: '#3b82f6', borderColor: '#3b82f6', borderRadius: 8, height: 44, fontWeight: 500 }}>
+            <Button block type="primary" style={{ background: '#4b41e1', borderColor: '#4b41e1', borderRadius: 12, height: 44, fontWeight: 600 }}>
               Manage HOD Profiles
             </Button>
           </Link>
@@ -139,8 +139,8 @@ function AdminDashboard() {
       </Row>
 
       <div style={{ marginBottom: 24 }}>
-        <Title level={4} style={{ color: '#0f172a', marginBottom: 8 }}>Department Contribution Leaderboard</Title>
-        <Text type="secondary" style={{ display: 'block', marginBottom: 24 }}>
+        <Title level={4} className="page-title" style={{ marginBottom: 8 }}>Department Contribution Leaderboard</Title>
+        <Text className="page-subtitle" style={{ display: 'block', marginBottom: 24 }}>
           Rankings based on aggregated mentor and student activity points.
         </Text>
 
@@ -153,7 +153,7 @@ function AdminDashboard() {
         ) : (
           <Row gutter={[24, 24]}>
             <Col xs={24} xl={14}>
-              <Card title="Analytics Chart" variant="borderless" style={{ borderRadius: 12, border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+              <Card className="app-card" title="Analytics Chart" variant="borderless" style={{ borderRadius: 12 }}>
                 <div style={{ height: 350, width: '100%' }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={data} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
@@ -176,7 +176,7 @@ function AdminDashboard() {
             </Col>
             
             <Col xs={24} xl={10}>
-              <Card title="Rankings Table" variant="borderless" style={{ borderRadius: 12, border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }} styles={{ body: { padding: 0 } }}>
+              <Card className="app-card" title="Rankings Table" variant="borderless" style={{ borderRadius: 12 }} styles={{ body: { padding: 0 } }}>
                 <Table 
                   columns={columns} 
                   dataSource={data} 

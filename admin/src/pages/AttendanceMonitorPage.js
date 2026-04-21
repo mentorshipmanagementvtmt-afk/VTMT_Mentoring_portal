@@ -193,18 +193,18 @@ function AttendanceMonitorPage() {
   ];
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f8fafc', padding: '32px 16px' }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+    <div className="page-shell" style={{ padding: '32px 16px' }}>
+      <div className="page-container fade-in-up">
         <Link to="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24, fontSize: 16, color: '#0ea5e9', textDecoration: 'none', fontWeight: 500 }}>
           <ArrowLeftOutlined /> Back to Dashboard
         </Link>
 
-        <Title level={2} style={{ margin: '0 0 8px 0', color: '#0f172a' }}>Faculty Attendance Monitoring</Title>
-        <Text type="secondary" style={{ display: 'block', marginBottom: 24, fontSize: 16 }}>
+        <Title level={2} className="page-title" style={{ margin: '0 0 8px 0' }}>Faculty Attendance Monitoring</Title>
+        <Text className="page-subtitle" style={{ display: 'block', marginBottom: 24, fontSize: 16 }}>
           Track faculty compliance in submitting weekly attendance logs for their mentees.
         </Text>
 
-        <Card variant="borderless" styles={{ body: { padding: 24 } }} style={{ borderRadius: 12, border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+        <Card className="app-card" variant="borderless" styles={{ body: { padding: 24 } }} style={{ borderRadius: 12 }}>
           <Tabs
             defaultActiveKey="1"
             items={[

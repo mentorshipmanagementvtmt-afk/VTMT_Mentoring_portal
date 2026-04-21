@@ -98,15 +98,15 @@ function ManageStudentsPage() {
   const uniqueSections = [...new Set(students.map(s => s.section).filter(Boolean))];
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f8fafc', padding: '32px 16px' }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+    <div className="page-shell" style={{ padding: '32px 16px' }}>
+      <div className="page-container fade-in-up">
         
-        <Title level={2} style={{ margin: '0 0 8px 0', color: '#0f172a' }}>Manage Students</Title>
-        <Text type="secondary" style={{ display: 'block', marginBottom: 24, fontSize: 16 }}>
+        <Title level={2} className="page-title" style={{ margin: '0 0 8px 0' }}>Manage Students</Title>
+        <Text className="page-subtitle" style={{ display: 'block', marginBottom: 24, fontSize: 16 }}>
            Search, filter, and view all student profiles across the university. Note: Profiles are View-Only for Admins.
         </Text>
 
-        <Card variant="borderless" style={{ borderRadius: 12, border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.02)', marginBottom: 24 }}>
+        <Card className="app-card" variant="borderless" style={{ borderRadius: 12, marginBottom: 24 }}>
            <Space size="large" align="end" wrap>
               <div>
                 <Text strong style={{ display: 'block', marginBottom: 4 }}>Department</Text>
@@ -154,7 +154,7 @@ function ManageStudentsPage() {
            </Space>
         </Card>
 
-        <Card variant="borderless" styles={{ body: { padding: 0 } }} style={{ borderRadius: 12, border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.02)', overflow: 'hidden' }}>
+        <Card className="app-card" variant="borderless" styles={{ body: { padding: 0 } }} style={{ borderRadius: 12, overflow: 'hidden' }}>
           <Table 
             columns={columns} 
             dataSource={students} 
