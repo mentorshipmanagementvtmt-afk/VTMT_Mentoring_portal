@@ -1,13 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import api from '../api';
-import { Card, Typography, Button, Table, Form, Input, Select, DatePicker, Space, Popconfirm,  Row, Col, Alert } from 'antd';
-import { DeleteOutlined, ReloadOutlined } from '@ant-design/icons';
+import { Alert, Card, Input, Table, Typography } from 'antd';
+import { ReloadOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
-const { Option } = Select;
-const { TextArea } = Input;
 
 function AcademicLogSection({ studentId }) {
   const [logs, setLogs] = useState([]);
@@ -36,8 +34,6 @@ function AcademicLogSection({ studentId }) {
     if (studentId) loadLogs();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [studentId, semesterFilter]);
-
-  // Editing/Adding disabled for Admin
 
   const columns = [
     { title: 'Sem', dataIndex: 'semester', key: 'semester', width: 80 },
@@ -69,9 +65,16 @@ function AcademicLogSection({ studentId }) {
             loading={loading}
           />
         </div>
-
-
       </div>
+
+      {error ? (
+        <Alert
+          type="error"
+          showIcon
+          message={error}
+          style={{ marginBottom: 16, borderRadius: 10 }}
+        />
+      ) : null}
 
       <Title level={5} style={{ marginBottom: 16, color: '#0f172a' }}>Logged Entries</Title>
       <Table 

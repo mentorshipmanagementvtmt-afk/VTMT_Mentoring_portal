@@ -1,10 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
+import { Avatar, Button, Card, Empty, Spin, Table, Tag } from 'antd';
+import { MailOutlined, IdcardOutlined, TeamOutlined, UserOutlined } from '@ant-design/icons';
 import api from '../api';
-import { Card, Typography, Row, Col, Spin, Empty, Button, Table, Tag } from 'antd';
-import { ArrowLeftOutlined, MailOutlined, IdcardOutlined, BankOutlined, UserOutlined } from '@ant-design/icons';
-
-const { Title, Text } = Typography;
 
 function HodDetailsPage() {
   const { id } = useParams();
@@ -16,147 +14,145 @@ function HodDetailsPage() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        // Fetch all HODs and Mentors (Admin read privileges allow this)
-        const [hodsRes, mentorsRes] = await Promise.all([
-          api.get('/users/hods'),
-          api.get('/users/mentors')
-        ]);
-        
-        // Find the specific HOD
-        const targetHod = hodsRes.data.find(h => h._id === id);
+        const [hodsRes, mentorsRes] = await Promise.all([api.get('/users/hods'), api.get('/users/mentors')]);
+        const targetHod = (hodsRes.data || []).find((item) => item._id === id);
         setHod(targetHod || null);
 
-        // Filter the total mentors list down to THIS specific HOD's department
         if (targetHod) {
-          const deptMentors = mentorsRes.data.filter(m => m.department === targetHod.department);
-          setMentors(deptMentors);
+          const departmentMentors = (mentorsRes.data || []).filter((mentor) => mentor.department === targetHod.department);
+          setMentors(departmentMentors);
+        } else {
+          setMentors([]);
         }
       } catch (error) {
-        console.error("Failed to load HOD details", error);
+        console.error('Failed to load HOD details', error);
       } finally {
         setLoading(false);
       }
     };
+
     fetchData();
   }, [id]);
 
   if (loading) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#f8fafc' }}>
-        <Spin size="large" />
-      </div>
-    );
+    return <Spin />;
   }
 
   if (!hod) {
     return (
-      <div style={{ padding: 40, textAlign: 'center', background: '#f8fafc', height: '100vh' }}>
-        <Title level={4} type="danger">HOD Not Found</Title>
-        <Link to="/hods">
-          <Button type="primary">Return to HODs</Button>
-        </Link>
-      </div>
+      <Card className="surface-panel">
+        <Empty description="HOD not found.">
+          <Link to="/hods">
+            <Button type="primary">Return to HODs</Button>
+          </Link>
+        </Empty>
+      </Card>
     );
   }
 
   const mentorColumns = [
     {
-      title: 'Name',
-      dataIndex: 'name',
-      key: 'name',
-      render: (text, record) => <span style={{ fontWeight: 500, color: '#0f172a' }}>{text}</span>
+      title: 'Faculty Profile',
+      key: 'profile',
+      render: (_, record) => (
+        <div className="avatar-cell">
+          <Avatar src={record.profileImage?.url || undefined} icon={!record.profileImage?.url && <UserOutlined />} size={42}>
+            {record.name?.slice(0, 2).toUpperCase()}
+          </Avatar>
+          <div>
+            <div style={{ fontWeight: 700, color: '#111c2d' }}>{record.name}</div>
+            <div style={{ fontSize: 12, color: '#6b7280' }}>{record.email}</div>
+          </div>
+        </div>
+      )
     },
     {
       title: 'MTS ID',
       dataIndex: 'mtsNumber',
       key: 'mtsNumber',
-      render: text => <Tag color="blue">{text}</Tag>
-    },
-    {
-      title: 'Email',
-      dataIndex: 'email',
-      key: 'email',
+      render: (value) => <Tag color="default">{value || 'N/A'}</Tag>
     },
     {
       title: 'Designation',
       dataIndex: 'designation',
       key: 'designation',
+      render: (value) => value || 'Faculty'
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
+      align: 'right',
+      render: (_, record) => (
+        <Link to={`/mentor/${record._id}`}>
+          <Button type="link" style={{ paddingInline: 0, fontWeight: 700 }}>
+            View Mentor
+          </Button>
+        </Link>
+      )
     }
   ];
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f8fafc', padding: '32px 16px' }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-        <Link to="/hods" style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24, fontSize: 16, color: '#0ea5e9', textDecoration: 'none', fontWeight: 500 }}>
-          <ArrowLeftOutlined /> Back to Manage HODs
-        </Link>
+    <div className="fade-in-up">
+      <div className="admin-page-header">
+        <div>
+          <div className="admin-page-eyebrow">HOD Profile</div>
+          <h1 className="admin-page-title">{hod.name}</h1>
+          <p className="admin-page-description">
+            Department leadership profile, contact details, and assigned faculty roster.
+          </p>
+        </div>
+      </div>
 
-        {/* HOD Profile Card */}
-        <Card 
-          variant="borderless" 
-          style={{ borderRadius: 16, boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', marginBottom: 32 }}
-          styles={{ body: { padding: 32 } }}
-        >
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 24 }}>
-            <div>
-              
-          <div style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
-              {hod.profileImage?.url ? (
-                <img src={hod.profileImage.url} alt="Profile" style={{ width: 100, height: 100, borderRadius: '50%', objectFit: 'cover', border: '4px solid #fff', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }} />
-              ) : (
-                <div style={{ width: 100, height: 100, borderRadius: '50%', background: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32, fontWeight: 700, color: '#94a3b8', border: '4px solid #fff', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
-                  {hod.name.charAt(0)}
-                </div>
-              )}
-              <Title level={2} style={{ margin: 0, color: '#0f172a' }}>{hod.name}</Title>
-          </div>
-    
-              <Text style={{ fontSize: 16, color: '#64748b', display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
-                <BankOutlined /> Department of {hod.department}
-              </Text>
-              <Tag color="cyan" style={{ marginTop: 16, fontSize: 14, padding: '4px 12px', borderRadius: 16 }}>{hod.designation}</Tag>
+      <Card className="surface-panel" variant="borderless" style={{ marginBottom: 18 }}>
+        <div className="profile-hero">
+          <Avatar src={hod.profileImage?.url || undefined} size={110} icon={!hod.profileImage?.url && <UserOutlined />}>
+            {hod.name?.slice(0, 2).toUpperCase()}
+          </Avatar>
+
+          <div>
+            <div style={{ fontFamily: 'Manrope, sans-serif', fontWeight: 800, fontSize: 30, color: '#111c2d' }}>{hod.name}</div>
+            <div className="chip-group" style={{ marginTop: 12 }}>
+              <span className="reference-chip">{hod.department}</span>
+              <span className="reference-chip">{hod.designation || 'HOD'}</span>
             </div>
-            
-            <div style={{ background: '#f1f5f9', padding: '20px', borderRadius: 12, minWidth: 300 }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <MailOutlined style={{ color: '#0ea5e9', fontSize: 18 }} />
-                  <Text style={{ fontSize: 15 }}>{hod.email}</Text>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <IdcardOutlined style={{ color: '#0ea5e9', fontSize: 18 }} />
-                  <Text style={{ fontSize: 15 }}>MTS ID: <strong style={{ color: '#0f172a' }}>{hod.mtsNumber}</strong></Text>
-                </div>
+            <div style={{ display: 'grid', gap: 8, marginTop: 16, color: '#5f6675' }}>
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                <MailOutlined />
+                <span>{hod.email}</span>
+              </div>
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                <IdcardOutlined />
+                <span>{hod.mtsNumber || 'N/A'}</span>
               </div>
             </div>
           </div>
-        </Card>
 
-        {/* Mentors Under HOD Section */}
-        <Card
-          title={
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 0' }}>
-              <UserOutlined style={{ color: '#0ea5e9' }} />
-              <span style={{ fontSize: 18, color: '#0f172a' }}>Assigned Faculty/Mentors for {hod.department}</span>
-            </div>
-          }
-          variant="outlined" 
-          style={{ borderRadius: 16, boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}
-        >
-          {mentors.length === 0 ? (
-            <Empty description="No Mentors assigned to this department yet." style={{ padding: '40px 0' }} />
-          ) : (
-            <Table 
-              dataSource={mentors} 
-              columns={mentorColumns} 
-              rowKey="_id" 
-              pagination={{ pageSize: 10 }}
-              style={{ padding: '0' }}
-            />
-          )}
-        </Card>
+          <div className="chip-group" style={{ justifyContent: 'flex-end' }}>
+            <span className="reference-chip">
+              <TeamOutlined />
+              {mentors.length} Faculty
+            </span>
+          </div>
+        </div>
+      </Card>
 
-      </div>
+      <Card
+        className="surface-panel table-panel"
+        variant="borderless"
+        title={<span style={{ fontFamily: 'Manrope, sans-serif', fontWeight: 800 }}>Assigned Faculty / Mentors</span>}
+      >
+        {mentors.length === 0 ? (
+          <Empty description="No mentors assigned to this department yet." />
+        ) : (
+          <Table
+            dataSource={mentors}
+            columns={mentorColumns}
+            rowKey="_id"
+            pagination={{ pageSize: 10, showSizeChanger: false }}
+          />
+        )}
+      </Card>
     </div>
   );
 }

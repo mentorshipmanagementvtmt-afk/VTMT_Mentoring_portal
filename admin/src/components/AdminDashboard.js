@@ -1,197 +1,283 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Row, Col, Button, Typography, Card, Table, Spin, Alert } from 'antd';
-import { WarningOutlined } from '@ant-design/icons';
+import {
+  Alert,
+  Button,
+  Card,
+  Empty,
+  Progress,
+  Typography
+} from 'antd';
+import {
+  BankOutlined,
+  BarChartOutlined,
+  TeamOutlined,
+  UsergroupAddOutlined,
+  WarningOutlined,
+  RiseOutlined,
+  PlusOutlined,
+  ArrowRightOutlined
+} from '@ant-design/icons';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from 'recharts';
 import api from '../api';
 import { toast } from 'react-toastify';
 
 const { Title, Text } = Typography;
 
-function AdminDashboard() {
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
+const chartColors = ['#4b41e1', '#645efb', '#0f766e', '#f59e0b', '#1e293b', '#ef4444'];
+
+export default function AdminDashboard() {
+  const [analytics, setAnalytics] = useState([]);
   const [alerts, setAlerts] = useState([]);
+  const [stats, setStats] = useState({
+    hods: 0,
+    mentors: 0,
+    students: 0
+  });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchAnalytics();
-    fetchAlerts();
+    const fetchDashboardData = async () => {
+      setLoading(true);
+      try {
+        const [analyticsRes, attendanceRes, hodsRes, mentorsRes, studentsRes] = await Promise.all([
+          api.get('/analytics/departments'),
+          api.get('/attendance/monitor'),
+          api.get('/users/hods'),
+          api.get('/users/mentors'),
+          api.get('/students')
+        ]);
+
+        const attendanceData = attendanceRes.data || [];
+        const flagged = attendanceData.filter(item => item.isFlagged);
+
+        setAnalytics(analyticsRes.data || []);
+        setAlerts(flagged);
+        setStats({
+          hods: (hodsRes.data || []).length,
+          mentors: (mentorsRes.data || []).length,
+          students: (studentsRes.data || []).length
+        });
+      } catch (err) {
+        toast.error('Failed to load dashboard analytics.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
   }, []);
 
-  const fetchAnalytics = async () => {
-    try {
-      const res = await api.get('/analytics/departments');
-      setData(res.data);
-    } catch (err) {
-      toast.error('Failed to load department analytics.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const complianceRate = useMemo(() => {
+    if (!alerts.length && !analytics.length && !stats.mentors) return 0;
+    const assumedTotal = Math.max(stats.mentors, alerts.length);
+    if (!assumedTotal) return 100;
+    return Math.max(0, Math.round(((assumedTotal - alerts.length) / assumedTotal) * 100));
+  }, [alerts.length, analytics.length, stats.mentors]);
 
-  const fetchAlerts = async () => {
-    try {
-      const res = await api.get('/attendance/monitor');
-      const flagged = res.data.filter(m => m.isFlagged);
-      setAlerts(flagged);
-    } catch (err) {
-      console.log('Failed to fetch attendance alerts');
-    }
-  };
-
-  const columns = [
+  const metricCards = [
     {
-      title: 'Rank',
-      key: 'rank',
-      render: (text, record, index) => <strong>#{index + 1}</strong>,
-      width: 80,
+      label: 'Total HODs',
+      value: stats.hods,
+      icon: <BankOutlined />,
+      footnote: '+ active profiles',
+      tone: 'positive'
     },
     {
-      title: 'Department',
-      dataIndex: 'department',
-      key: 'department',
-      render: text => <Text strong style={{ color: '#3b82f6' }}>{text}</Text>
+      label: 'Total Mentors',
+      value: stats.mentors,
+      icon: <UsergroupAddOutlined />,
+      footnote: `${alerts.length} flagged`,
+      tone: alerts.length ? 'warning' : 'positive'
     },
     {
-      title: 'Total Contribution Score',
-      dataIndex: 'departmentScore',
-      key: 'departmentScore',
-      align: 'right',
-      render: val => <Text style={{ color: '#10b981', fontWeight: 600, fontSize: 16 }}>{val} pts</Text>
+      label: 'Total Students',
+      value: stats.students,
+      icon: <TeamOutlined />,
+      footnote: 'Directory synced',
+      tone: 'positive'
+    },
+    {
+      label: 'Compliance Rate',
+      value: `${complianceRate}%`,
+      icon: <BarChartOutlined />,
+      footnote: alerts.length ? 'Needs follow-up' : 'Healthy',
+      tone: alerts.length ? 'danger' : 'positive'
     }
   ];
 
-  const colors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4', '#ec4899'];
+  const quickActions = [
+    { label: 'Manage HODs', to: '/hods' },
+    { label: 'Manage Faculty', to: '/departments' },
+    { label: 'Manage Students', to: '/students' },
+    { label: 'Attendance Review', to: '/attendance/monitor' }
+  ];
 
   return (
     <div className="fade-in-up">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', marginBottom: 20 }}>
+      <div className="admin-page-header">
         <div>
-          <Title level={4} className="page-title" style={{ marginBottom: 4 }}>Admin Dashboard</Title>
-          <Text className="page-subtitle" style={{ display: 'block' }}>
-            System Administrator View & Analytics
-          </Text>
+          <div className="admin-page-eyebrow">System Overview</div>
+          <h1 className="admin-page-title">System Admin Dashboard</h1>
+          <p className="admin-page-description">
+            Overview of mentorship operations, faculty compliance, and department activity across the institution.
+          </p>
+        </div>
+
+        <div className="admin-actions">
+          <Button icon={<BarChartOutlined />}>Current Term: Fall 2024</Button>
+          <Button type="primary" icon={<PlusOutlined />}>
+            Export Report
+          </Button>
         </div>
       </div>
 
       {alerts.length > 0 && (
         <Alert
-          title="Attention Required: Faculty Compliance Issues"
-          description={
-            <div style={{ marginTop: 8 }}>
-              <p>The following faculty members have been flagged for attendance compliance issues:</p>
-              <ul style={{ paddingLeft: 20 }}>
-                {alerts.map(a => (
-                  <li key={a.mentorId}>
-                    <strong>{a.mentorName} ({a.department})</strong> - 
-                    {a.missingWeeksFlag ? ' Missing recent attendance logs (>7 days).' : ` Low average mentee attendance (${a.avgMenteePercentage}%).`}
-                  </li>
-                ))}
-              </ul>
-              <Link to="/attendance/monitor">
-                <Button type="primary" danger size="small" style={{ marginTop: 8 }}>Go to Monitoring Dashboard</Button>
-              </Link>
-            </div>
-          }
           type="error"
           showIcon
           icon={<WarningOutlined />}
-          style={{ marginBottom: 24, borderRadius: 8, border: '1px solid #fecaca', background: '#fef2f2' }}
+          message="Attention required"
+          description={`${alerts.length} mentor records are flagged for missing logs or low attendance and should be reviewed.`}
+          className="surface-panel"
+          style={{ marginBottom: 18 }}
         />
       )}
-      
-      <Row gutter={[16, 16]} style={{ paddingBottom: 32, borderBottom: '1px solid #e2e8f0', marginBottom: 32 }}>
-        <Col xs={24} sm={12} lg={6}>
-          <Link to="/hods" style={{ display: 'block' }}>
-            <Button block type="primary" style={{ background: '#4b41e1', borderColor: '#4b41e1', borderRadius: 12, height: 44, fontWeight: 600 }}>
-              Manage HOD Profiles
-            </Button>
-          </Link>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Link to="/departments" style={{ display: 'block' }}>
-            <Button block type="primary" style={{ background: '#0ea5e9', borderColor: '#0ea5e9', borderRadius: 8, height: 44, fontWeight: 500 }}>
-              Manage Faculties
-            </Button>
-          </Link>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Link to="/mentors/create" style={{ display: 'block' }}>
-            <Button block type="primary" style={{ background: '#10b981', borderColor: '#10b981', borderRadius: 8, height: 44, fontWeight: 500 }}>
-               Add New Faculty
-            </Button>
-          </Link>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Link to="/students" style={{ display: 'block' }}>
-            <Button block type="primary" style={{ background: '#8b5cf6', borderColor: '#8b5cf6', borderRadius: 8, height: 44, fontWeight: 500 }}>
-               View Students
-            </Button>
-          </Link>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Link to="/attendance/monitor" style={{ display: 'block' }}>
-            <Button block type="primary" style={{ background: '#ef4444', borderColor: '#ef4444', borderRadius: 8, height: 44, fontWeight: 500 }}>
-              Low Attendance Monitor
-            </Button>
-          </Link>
-        </Col>
-      </Row>
 
-      <div style={{ marginBottom: 24 }}>
-        <Title level={4} className="page-title" style={{ marginBottom: 8 }}>Department Contribution Leaderboard</Title>
-        <Text className="page-subtitle" style={{ display: 'block', marginBottom: 24 }}>
-          Rankings based on aggregated mentor and student activity points.
-        </Text>
-
-        {loading ? (
-          <div style={{ padding: '60px 0', textAlign: 'center' }}><Spin size="large" /></div>
-        ) : data.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 40, background: '#f8fafc', borderRadius: 12, border: '1px dashed #cbd5e1' }}>
-             <Text type="secondary">No activity data available to generate leaderboard.</Text>
-          </div>
-        ) : (
-          <Row gutter={[24, 24]}>
-            <Col xs={24} xl={14}>
-              <Card className="app-card" title="Analytics Chart" variant="borderless" style={{ borderRadius: 12 }}>
-                <div style={{ height: 350, width: '100%' }}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={data} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                      <XAxis dataKey="department" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 13 }} dy={10} />
-                      <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 13 }} />
-                      <Tooltip 
-                        cursor={{ fill: '#f1f5f9' }} 
-                        contentStyle={{ borderRadius: 8, border: 'none', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}
-                      />
-                      <Bar dataKey="departmentScore" name="Points" radius={[4, 4, 0, 0]}>
-                        {data.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </Card>
-            </Col>
-            
-            <Col xs={24} xl={10}>
-              <Card className="app-card" title="Rankings Table" variant="borderless" style={{ borderRadius: 12 }} styles={{ body: { padding: 0 } }}>
-                <Table 
-                  columns={columns} 
-                  dataSource={data} 
-                  rowKey="department" 
-                  pagination={false}
-                  size="middle"
-                />
-              </Card>
-            </Col>
-          </Row>
-        )}
+      <div className="metric-grid" style={{ marginBottom: 18 }}>
+        {metricCards.map(card => (
+          <Card key={card.label} className="surface-panel metric-card" variant="borderless">
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <div
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 14,
+                  display: 'grid',
+                  placeItems: 'center',
+                  background: '#eef2ff',
+                  color: '#4b41e1',
+                  fontSize: 18
+                }}
+              >
+                {card.icon}
+              </div>
+              <div className="metric-label" style={{ marginTop: 18 }}>{card.label}</div>
+              <div className="metric-value">{card.value}</div>
+              <div className={`metric-footnote ${card.tone}`}>
+                <RiseOutlined />
+                {card.footnote}
+              </div>
+            </div>
+          </Card>
+        ))}
       </div>
 
+      <div className="split-dashboard">
+        <Card
+          className="surface-panel"
+          title={<span style={{ fontFamily: 'Manrope, sans-serif', fontWeight: 800 }}>Department Contribution</span>}
+          extra={<Text type="secondary">Activity points based on mentor and student logging</Text>}
+        >
+          {loading && analytics.length > 0 ? (
+            <div style={{ display: 'grid', placeItems: 'center', minHeight: 300 }}>
+              <Text type="secondary">Loading records...</Text>
+            </div>
+          ) : analytics.length === 0 ? (
+            <Empty description="No records found for department contribution." />
+          ) : (
+            <div style={{ height: 330 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={analytics} margin={{ top: 10, right: 10, left: -16, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#ece8ee" />
+                  <XAxis dataKey="department" axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 12 }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 12 }} />
+                  <Tooltip
+                    cursor={{ fill: '#f4f1f8' }}
+                    contentStyle={{ borderRadius: 14, border: '1px solid #ece8ee', boxShadow: '0 18px 30px rgba(9,20,38,0.08)' }}
+                  />
+                  <Bar dataKey="departmentScore" radius={[8, 8, 0, 0]}>
+                    {analytics.map((entry, index) => (
+                      <Cell key={entry.department} fill={chartColors[index % chartColors.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </Card>
+
+        <div className="dashboard-side-stack">
+          <Card className="surface-panel danger-panel" variant="borderless">
+            <Title level={4} style={{ marginTop: 0, marginBottom: 6, fontFamily: 'Manrope, sans-serif' }}>
+              Attention Required
+            </Title>
+            <Text style={{ color: '#7f1d1d' }}>Critical compliance issues detected in recent attendance activity.</Text>
+
+            <div style={{ display: 'grid', gap: 12, marginTop: 18 }}>
+              {alerts.slice(0, 4).map(alert => (
+                <div
+                  key={alert.mentorId}
+                  style={{
+                    padding: '14px 16px',
+                    borderRadius: 16,
+                    background: 'rgba(255,255,255,0.72)',
+                    border: '1px solid rgba(186,26,26,0.12)'
+                  }}
+                >
+                  <div style={{ fontWeight: 700, color: '#7f1d1d' }}>{alert.mentorName}</div>
+                  <div style={{ marginTop: 4, color: '#8b3a3a', fontSize: 13 }}>
+                    {alert.missingWeeksFlag
+                      ? 'Missing recent attendance logs'
+                      : `Average mentee attendance at ${alert.avgMenteePercentage}%`}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <Link to="/attendance/monitor">
+              <Button danger type="primary" block style={{ marginTop: 16, borderRadius: 12 }}>
+                View All Alerts
+              </Button>
+            </Link>
+          </Card>
+
+          <Card className="surface-panel" title={<span style={{ fontFamily: 'Manrope, sans-serif', fontWeight: 800 }}>Quick Actions</span>}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
+              {quickActions.map(action => (
+                <Link key={action.label} to={action.to} className="activity-card-link">
+                  <Card className="activity-card" style={{ borderRadius: 18, minHeight: 128 }}>
+                    <div
+                      style={{
+                        width: 42,
+                        height: 42,
+                        borderRadius: 999,
+                        display: 'grid',
+                        placeItems: 'center',
+                        background: '#eef2ff',
+                        color: '#4b41e1',
+                        marginBottom: 16
+                      }}
+                    >
+                      <ArrowRightOutlined />
+                    </div>
+                    <div style={{ fontFamily: 'Manrope, sans-serif', fontWeight: 800, color: '#111c2d' }}>{action.label}</div>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          </Card>
+
+          <Card className="surface-panel" title={<span style={{ fontFamily: 'Manrope, sans-serif', fontWeight: 800 }}>Compliance Snapshot</span>}>
+            <Text type="secondary">Mentor submission health based on the latest attendance monitoring sweep.</Text>
+            <Progress percent={complianceRate} strokeColor="#4b41e1" railColor="#ece8ee" style={{ marginTop: 18 }} />
+            <div className="chip-group" style={{ marginTop: 8 }}>
+              <span className="reference-chip">{alerts.length} flagged mentors</span>
+              <span className="reference-chip">{stats.mentors || 0} total mentors</span>
+            </div>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }
-
-export default AdminDashboard;

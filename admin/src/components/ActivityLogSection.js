@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import api from '../api';
-import { Card, Typography, Button, Table, Form, Input, Select, DatePicker, Popconfirm,  Row, Col, Alert } from 'antd';
-import { DeleteOutlined, ReloadOutlined } from '@ant-design/icons';
+import { Alert, Card, Input, Select, Table, Typography } from 'antd';
+import { ReloadOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
-const { TextArea } = Input;
 
 const CATEGORY_OPTIONS = [
   'Conference', 'Journal Publication', 'Book Publication', 'Patent',
@@ -45,8 +44,6 @@ function ActivityLogSection({ studentId }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [studentId, semesterFilter, categoryFilter]);
 
-  // Editing/Adding disabled for Admin
-
   const columns = [
     { title: 'Sem', dataIndex: 'semester', key: 'semester', width: 80 },
     { title: 'Date', dataIndex: 'date', key: 'date', render: text => text ? dayjs(text).format('DD/MM/YYYY') : '-', width: 100 },
@@ -82,15 +79,22 @@ function ActivityLogSection({ studentId }) {
             allowClear
             placeholder="All Categories"
             style={{ width: 220 }}
-            value={categoryFilter}
-            onChange={setCategoryFilter}
+            value={categoryFilter || undefined}
+            onChange={(value) => setCategoryFilter(value || '')}
           >
             {CATEGORY_OPTIONS.map(c => <Option key={c} value={c}>{c}</Option>)}
           </Select>
         </div>
-
-
       </div>
+
+      {error ? (
+        <Alert
+          type="error"
+          showIcon
+          message={error}
+          style={{ marginBottom: 16, borderRadius: 10 }}
+        />
+      ) : null}
 
       <Title level={5} style={{ marginBottom: 16, color: '#0f172a' }}>Logged Activities</Title>
       <Table 

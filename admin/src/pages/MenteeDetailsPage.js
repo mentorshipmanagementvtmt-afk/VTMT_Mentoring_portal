@@ -1,123 +1,146 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useParams, Link } from 'react-router-dom';
 import api from '../api';
-import { Card, Row, Col, Typography, Button, Spin, Avatar, Space, Tag, Descriptions, Divider } from 'antd';
-import { ArrowLeftOutlined, EditOutlined, ReadOutlined, WarningOutlined, CommentOutlined, FlagOutlined, DownloadOutlined } from '@ant-design/icons';
+import { Avatar, Button, Card, Descriptions, Empty, Tag } from 'antd';
+import {
+  EditOutlined,
+  ReadOutlined,
+  WarningOutlined,
+  CommentOutlined,
+  FlagOutlined,
+  DownloadOutlined
+} from '@ant-design/icons';
 import { useAuth } from '../context/AuthContext';
 import { downloadStudentReport } from '../utils/reportGenerator';
 
-const { Title, Text } = Typography;
+const activityItems = [
+  { key: 'assessments', label: 'Assessment Data', icon: <ReadOutlined />, description: 'View continuous evaluation marks, assignments, and internal performance.' },
+  { key: 'exam-performance', label: 'Exam Performance', icon: <ReadOutlined />, description: 'Track end-semester examination outcomes and academic progress.' },
+  { key: 'interventions', label: 'Intervention Log', icon: <CommentOutlined />, description: 'Review mentoring interventions, actions taken, and measurable impact.' },
+  { key: 'academic-problems', label: 'Academic Problems', icon: <WarningOutlined />, description: 'Flag and monitor attendance issues, failing grades, or other risk markers.' },
+  { key: 'activities', label: 'Co/Extracurricular', icon: <FlagOutlined />, description: 'Capture clubs, sports, hackathons, and other extra activities.' }
+];
 
-function MenteeDetailsPage() {
+export default function MenteeDetailsPage() {
   const { studentId } = useParams();
   const { user } = useAuth();
   const [student, setStudent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
 
-  const fetchStudent = async () => {
-    try {
-      const response = await api.get(`/students/${studentId}/details`);
-      setStudent(response.data.profile);
-    } catch (err) {
-      toast.error('Failed to fetch student details');
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    const fetchStudent = async () => {
+      try {
+        const response = await api.get(`/students/${studentId}/details`);
+        setStudent(response.data.profile);
+      } catch (error) {
+        toast.error('Failed to fetch student details.');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  useEffect(() => { fetchStudent(); }, [studentId]);
+    fetchStudent();
+  }, [studentId]);
 
   if (loading) {
-    return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#f8fafc' }}><Spin size="large" /></div>;
+    return <Card className="surface-panel">Loading student profile...</Card>;
   }
-  if (!student) return <Typography>No student found.</Typography>;
+
+  if (!student) {
+    return <Card className="surface-panel"><Empty description="No student found." /></Card>;
+  }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f8fafc', padding: '32px 16px' }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-        <Link to={user?.role === 'mentor' ? `/mentor/${user._id}` : '/students'} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24, fontSize: 16, color: '#0ea5e9', textDecoration: 'none', fontWeight: 500 }}>
-          <ArrowLeftOutlined /> Back to Students
-        </Link>
-        <Card variant="borderless" style={{ borderRadius: 16, marginBottom: 24 }}>
-          <Row gutter={24} align="middle">
-             <Col>
-               {student.profileImage?.url ? (
-                 <Avatar src={student.profileImage.url} size={100} />
-               ) : (
-                 <Avatar size={100} style={{ backgroundColor: '#e2e8f0', color: '#64748b', fontSize: 32 }}>{student.name.charAt(0)}</Avatar>
-               )}
-             </Col>
-             <Col flex="auto">
-                <Title level={2} style={{ margin: 0 }}>{student.name}</Title>
-                <Text style={{ fontSize: 16, color: '#64748b' }}>Reg: {student.registerNumber} | VM: {student.vmNumber}</Text>
-                <div style={{ marginTop: 8 }}>
-                   <Tag color="blue">{student.department}</Tag>
-                   <Tag color="cyan">Batch: {student.batch}</Tag>
-                   <Tag color="purple">Sec: {student.section}</Tag>
-                </div>
-             </Col>
-             <Col>
-                {user?.role === 'mentor' && (
-                  <Link to={`/mentee/${student._id}/edit`}>
-                    <Button type="primary" icon={<EditOutlined />}>Edit Profile Information</Button>
-                  </Link>
-                )}
-                <Button 
-                  type="primary" 
-                  icon={<DownloadOutlined />} 
-                  onClick={() => downloadStudentReport(studentId, setIsDownloading)} 
-                  loading={isDownloading}
-                  style={{ background: '#0ea5e9', borderColor: '#0ea5e9', marginLeft: 8 }}
-                >
-                  Download Report
-                </Button>
-             </Col>
-          </Row>
+    <div className="fade-in-up">
+      <div className="admin-page-header">
+        <div>
+          <div className="admin-page-eyebrow">Student Profile</div>
+          <h1 className="admin-page-title">{student.name}</h1>
+          <p className="admin-page-description">
+            Central hub for personal details, academic tracking, interventions, and activity records.
+          </p>
+        </div>
+
+        <div className="admin-actions">
+          <Button
+            icon={<DownloadOutlined />}
+            onClick={() => downloadStudentReport(studentId, setIsDownloading)}
+            loading={isDownloading}
+          >
+            Download Report
+          </Button>
+          {user?.role === 'mentor' && (
+            <Link to={`/mentee/${student._id}/edit`}>
+              <Button type="primary" icon={<EditOutlined />}>Edit Profile</Button>
+            </Link>
+          )}
+        </div>
+      </div>
+
+      <Card className="surface-panel" variant="borderless" style={{ marginBottom: 18 }}>
+        <div className="profile-hero">
+          <Avatar src={student.profileImage?.url || undefined} size={112}>
+            {student.name?.slice(0, 2).toUpperCase()}
+          </Avatar>
+
+          <div>
+            <div style={{ fontFamily: 'Manrope, sans-serif', fontWeight: 800, fontSize: 32, color: '#111c2d' }}>{student.name}</div>
+            <div style={{ color: '#5f6675', marginTop: 6 }}>Reg: {student.registerNumber} • VM: {student.vmNumber || 'N/A'}</div>
+            <div className="chip-group" style={{ marginTop: 14 }}>
+              <span className="reference-chip">{student.department}</span>
+              <span className="reference-chip">Batch {student.batch}</span>
+              <span className="reference-chip">Section {student.section}</span>
+            </div>
+          </div>
+
+          <Tag color="success" style={{ borderRadius: 999, paddingInline: 12 }}>Active</Tag>
+        </div>
+      </Card>
+
+      <div className="profile-details-grid">
+        <Card className="surface-panel" variant="borderless" title={<span style={{ fontFamily: 'Manrope, sans-serif', fontWeight: 800 }}>Personal Details</span>}>
+          <Descriptions column={1} size="small">
+            <Descriptions.Item label="Date of Birth">{student.personal?.dateOfBirth ? new Date(student.personal.dateOfBirth).toLocaleDateString() : 'N/A'}</Descriptions.Item>
+            <Descriptions.Item label="Contact Number">{student.contact?.contactNumber || 'N/A'}</Descriptions.Item>
+            <Descriptions.Item label="Email">{student.contact?.email || 'N/A'}</Descriptions.Item>
+            <Descriptions.Item label="Father's Name">{student.parents?.fatherName || 'N/A'}</Descriptions.Item>
+          </Descriptions>
         </Card>
 
-        {/* Activity Buttons Matrix */}
-        <Typography.Title level={4}>Student Activity Tracking</Typography.Title>
-        <Row gutter={[16,16]} style={{ marginBottom: 32 }}>
-           <Col xs={12} md={8} lg={6}>
-             <Link to={`/mentee/${student._id}/assessments`}>
-               <Button block size="large" icon={<ReadOutlined />} style={{ height: 80, fontSize: 16 }}>Assessment Data</Button>
-             </Link>
-           </Col>
-           <Col xs={12} md={8} lg={6}>
-             <Link to={`/mentee/${student._id}/exam-performance`}>
-               <Button block size="large" icon={<ReadOutlined />} style={{ height: 80, fontSize: 16 }}>Exam Performance</Button>
-             </Link>
-           </Col>
-           <Col xs={12} md={8} lg={6}>
-             <Link to={`/mentee/${student._id}/interventions`}>
-               <Button block size="large" icon={<CommentOutlined />} style={{ height: 80, fontSize: 16 }}>Intervention Log</Button>
-             </Link>
-           </Col>
-           <Col xs={12} md={8} lg={6}>
-             <Link to={`/mentee/${student._id}/academic-problems`}>
-               <Button block size="large" icon={<WarningOutlined />} style={{ height: 80, fontSize: 16 }}>Academic Problems</Button>
-             </Link>
-           </Col>
-           <Col xs={12} md={8} lg={6}>
-             <Link to={`/mentee/${student._id}/activities`}>
-               <Button block size="large" icon={<FlagOutlined />} style={{ height: 80, fontSize: 16 }}>Co/Extracurricular</Button>
-             </Link>
-           </Col>
-        </Row>
-
-        <Card title="Detailed Profile Information" variant="borderless" style={{ borderRadius: 16 }}>
-           <Descriptions bordered column={{ xs: 1, sm: 2 }}>
-             <Descriptions.Item label="Date of Birth">{student.personal?.dateOfBirth ? new Date(student.personal.dateOfBirth).toLocaleDateString() : 'N/A'}</Descriptions.Item>
-             <Descriptions.Item label="Contact Number">{student.contact?.contactNumber || 'N/A'}</Descriptions.Item>
-             <Descriptions.Item label="Email">{student.contact?.email || 'N/A'}</Descriptions.Item>
-             <Descriptions.Item label="Father's Name">{student.parents?.fatherName || 'N/A'}</Descriptions.Item>
-           </Descriptions>
-        </Card>
-
+        <div>
+          <div style={{ fontFamily: 'Manrope, sans-serif', fontWeight: 800, fontSize: 22, color: '#111c2d', marginBottom: 14 }}>
+            Activity Hub
+          </div>
+          <div className="activity-grid">
+            {activityItems.map(item => (
+              <Link key={item.key} to={`/mentee/${student._id}/${item.key}`} className="activity-card-link">
+                <Card className="surface-panel activity-card" variant="borderless">
+                  <div
+                    style={{
+                      width: 46,
+                      height: 46,
+                      borderRadius: 14,
+                      display: 'grid',
+                      placeItems: 'center',
+                      background: item.key === 'academic-problems' ? '#fee2e2' : '#eef2ff',
+                      color: item.key === 'academic-problems' ? '#b91c1c' : '#4b41e1',
+                      marginBottom: 16
+                    }}
+                  >
+                    {item.icon}
+                  </div>
+                  <div style={{ fontFamily: 'Manrope, sans-serif', fontWeight: 800, fontSize: 20, color: item.key === 'academic-problems' ? '#b91c1c' : '#111c2d' }}>
+                    {item.label}
+                  </div>
+                  <div style={{ color: '#5f6675', marginTop: 8 }}>{item.description}</div>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
 }
-export default MenteeDetailsPage;

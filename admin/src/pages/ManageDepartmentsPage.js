@@ -1,46 +1,54 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Card, Typography, Row, Col } from 'antd';
-import { ArrowLeftOutlined, BankOutlined } from '@ant-design/icons';
+import { BankOutlined, TeamOutlined } from '@ant-design/icons';
+import { Card } from 'antd';
 
-const { Title, Text } = Typography;
-
-const DEPARTMENTS = [
-  'AI&DS',
-  'IT',
-  'CSE',
-  'MECH',
-  'CSBS',
-  'Cyber Security'
-];
+const DEPARTMENTS = ['AI&DS', 'IT', 'CSE', 'MECH', 'CSBS', 'Cyber Security'];
 
 function ManageDepartmentsPage() {
   return (
-    <div style={{ minHeight: '100vh', background: '#f8fafc', padding: '32px 16px' }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-        <Link to="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24, fontSize: 16, color: '#0ea5e9', textDecoration: 'none', fontWeight: 500 }}>
-          <ArrowLeftOutlined /> Back to Dashboard
-        </Link>
-        
-        <Title level={3} style={{ marginBottom: 32, color: '#0f172a' }}>Manage Departments</Title>
+    <div className="fade-in-up">
+      <div className="admin-page-header">
+        <div>
+          <div className="admin-page-eyebrow">Department Directory</div>
+          <h1 className="admin-page-title">Manage Departments</h1>
+          <p className="admin-page-description">
+            Navigate into each department to manage HOD assignments, faculty mapping, and mentorship operations.
+          </p>
+        </div>
+      </div>
 
-        <Row gutter={[24, 24]}>
-          {DEPARTMENTS.map(dept => (
-            <Col xs={24} sm={12} md={8} key={dept}>
-              <Link to={`/departments/${dept}`} style={{ textDecoration: 'none' }}>
-                <Card 
-                  hoverable 
-                  style={{ borderRadius: 16, borderColor: '#e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', textAlign: 'center', transition: 'all 0.3s ease' }}
-                  styles={{ body: { padding: '40px 24px' } }}
-                >
-                  <BankOutlined style={{ fontSize: 48, color: '#3b82f6', marginBottom: 16 }} />
-                  <Title level={4} style={{ margin: 0, color: '#0f172a' }}>{dept}</Title>
-                  <Text type="secondary" style={{ display: 'block', marginTop: 8 }}>View HOD & Faculties</Text>
-                </Card>
-              </Link>
-            </Col>
-          ))}
-        </Row>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 18 }}>
+        {DEPARTMENTS.map((department) => (
+          <Link key={department} to={`/departments/${department}`} className="activity-card-link">
+            <Card className="surface-panel activity-card" variant="borderless">
+              <div
+                style={{
+                  width: 46,
+                  height: 46,
+                  borderRadius: 14,
+                  background: '#eef2ff',
+                  color: '#4b41e1',
+                  display: 'grid',
+                  placeItems: 'center',
+                  marginBottom: 16
+                }}
+              >
+                <BankOutlined />
+              </div>
+              <div style={{ fontFamily: 'Manrope, sans-serif', fontWeight: 800, fontSize: 24, color: '#111c2d' }}>
+                {department}
+              </div>
+              <p style={{ color: '#5f6675', marginTop: 10, marginBottom: 18 }}>
+                View department details, assigned leadership, and mentor hierarchy.
+              </p>
+              <span className="reference-chip">
+                <TeamOutlined />
+                Open Department
+              </span>
+            </Card>
+          </Link>
+        ))}
       </div>
     </div>
   );

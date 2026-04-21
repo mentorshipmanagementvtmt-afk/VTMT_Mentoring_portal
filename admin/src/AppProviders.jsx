@@ -21,8 +21,31 @@ const theme = {
     Layout: {
       headerBg: '#ffffff'
     },
+    Button: {
+      controlHeight: 42,
+      fontWeight: 600
+    },
     Card: {
       borderRadiusLG: 16
+    },
+    Input: {
+      controlHeight: 42
+    },
+    Select: {
+      controlHeight: 42
+    },
+    Menu: {
+      itemHeight: 46,
+      itemBorderRadius: 14,
+      itemActiveBg: '#eef2ff',
+      itemSelectedBg: '#f5f3ff',
+      itemSelectedColor: '#4b41e1',
+      itemColor: '#5b6474'
+    },
+    Tabs: {
+      itemActiveColor: '#4b41e1',
+      itemSelectedColor: '#4b41e1',
+      inkBarColor: '#4b41e1'
     },
     Table: {
       headerBg: '#f5f3f4',

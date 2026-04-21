@@ -1,21 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import { Link } from 'react-router-dom';
 import api from '../api';
-import { Card, Table, Typography, Button, Spin, Tag, Space, Input, Select } from 'antd';
-import { EyeOutlined, SearchOutlined } from '@ant-design/icons';
+import { Button, Card, Input, Select, Table, Tag, Typography } from 'antd';
+import { EyeOutlined, SearchOutlined, ReloadOutlined } from '@ant-design/icons';
 
-const { Title, Text } = Typography;
-const { Option } = Select;
+const { Text } = Typography;
 
-function ManageStudentsPage() {
+export default function ManageStudentsPage() {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  // Filters
   const [departmentFilter, setDepartmentFilter] = useState('');
   const [batchFilter, setBatchFilter] = useState('');
   const [sectionFilter, setSectionFilter] = useState('');
+  const [query, setQuery] = useState('');
 
   const fetchStudents = async () => {
     setLoading(true);
@@ -26,7 +24,7 @@ function ManageStudentsPage() {
       if (sectionFilter) params.append('section', sectionFilter);
 
       const response = await api.get(`/students?${params.toString()}`);
-      setStudents(response.data);
+      setStudents(response.data || []);
     } catch (err) {
       toast.error('Failed to fetch students data.');
     } finally {
@@ -39,134 +37,137 @@ function ManageStudentsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [departmentFilter, batchFilter, sectionFilter]);
 
+  const filteredStudents = useMemo(() => {
+    if (!query) return students;
+    const search = query.toLowerCase();
+    return students.filter(student =>
+      student.name?.toLowerCase().includes(search) ||
+      student.registerNumber?.toLowerCase().includes(search) ||
+      student.department?.toLowerCase().includes(search) ||
+      student.currentMentor?.name?.toLowerCase().includes(search)
+    );
+  }, [students, query]);
+
+  const uniqueDepartments = [...new Set(students.map(student => student.department).filter(Boolean))];
+  const uniqueBatches = [...new Set(students.map(student => student.batch).filter(Boolean))];
+  const uniqueSections = [...new Set(students.map(student => student.section).filter(Boolean))];
+
   const columns = [
     {
       title: 'Reg Number',
       dataIndex: 'registerNumber',
       key: 'registerNumber',
-      sorter: (a, b) => a.registerNumber.localeCompare(b.registerNumber),
-      render: text => <Text strong style={{ color: '#0ea5e9' }}>{text}</Text>
+      render: value => <span style={{ fontWeight: 700, color: '#24324a' }}>{value}</span>
     },
     {
       title: 'Name',
       dataIndex: 'name',
       key: 'name',
-      sorter: (a, b) => a.name.localeCompare(b.name)
+      render: (value) => (
+        <div className="avatar-cell">
+          <div className="avatar-initial">{value?.slice(0, 2).toUpperCase()}</div>
+          <span style={{ fontWeight: 700 }}>{value}</span>
+        </div>
+      )
     },
     {
       title: 'Department',
       dataIndex: 'department',
-      key: 'department',
+      key: 'department'
     },
     {
-      title: 'Year (Batch)',
-      dataIndex: 'batch',
-      key: 'batch',
-      render: text => <Tag color="blue">{text || 'N/A'}</Tag>
-    },
-    {
-      title: 'Section',
-      dataIndex: 'section',
-      key: 'section',
-      render: text => <Tag color="purple">{text || 'N/A'}</Tag>
+      title: 'Batch & Sec',
+      key: 'batchSection',
+      render: (_, record) => (
+        <div className="chip-group">
+          <Tag color="default">{record.batch || 'N/A'}</Tag>
+          <Tag color="default">{record.section || 'N/A'}</Tag>
+        </div>
+      )
     },
     {
       title: 'Mentor',
       key: 'mentor',
-      render: (text, record) => record.currentMentor ? (
-        <Space direction="vertical" size={0}>
-          <Text strong>{record.currentMentor.name}</Text>
-          <Text type="secondary" style={{ fontSize: 12 }}>{record.currentMentor.mtsNumber}</Text>
-        </Space>
-      ) : <Text type="secondary">Unassigned</Text>
+      render: (_, record) =>
+        record.currentMentor ? (
+          <div>
+            <div style={{ fontWeight: 700 }}>{record.currentMentor.name}</div>
+            <div style={{ fontSize: 12, color: '#6b7280' }}>{record.currentMentor.mtsNumber}</div>
+          </div>
+        ) : (
+          <Text type="secondary">Unassigned</Text>
+        )
     },
     {
       title: 'Actions',
       key: 'actions',
-      render: (text, record) => (
+      align: 'right',
+      render: (_, record) => (
         <Link to={`/mentee/${record._id}`}>
-          <Button type="primary" size="small" icon={<EyeOutlined />} style={{ borderRadius: 6, fontWeight: 500 }}>
-             View Profile
+          <Button type="link" icon={<EyeOutlined />} style={{ fontWeight: 700 }}>
+            View Profile
           </Button>
         </Link>
       )
     }
   ];
 
-  const uniqueDepartments = [...new Set(students.map(s => s.department).filter(Boolean))];
-  const uniqueBatches = [...new Set(students.map(s => s.batch).filter(Boolean))];
-  const uniqueSections = [...new Set(students.map(s => s.section).filter(Boolean))];
-
   return (
-    <div className="page-shell" style={{ padding: '32px 16px' }}>
-      <div className="page-container fade-in-up">
-        
-        <Title level={2} className="page-title" style={{ margin: '0 0 8px 0' }}>Manage Students</Title>
-        <Text className="page-subtitle" style={{ display: 'block', marginBottom: 24, fontSize: 16 }}>
-           Search, filter, and view all student profiles across the university. Note: Profiles are View-Only for Admins.
-        </Text>
-
-        <Card className="app-card" variant="borderless" style={{ borderRadius: 12, marginBottom: 24 }}>
-           <Space size="large" align="end" wrap>
-              <div>
-                <Text strong style={{ display: 'block', marginBottom: 4 }}>Department</Text>
-                <Select
-                  showSearch
-                  allowClear
-                  placeholder="All Departments"
-                  style={{ width: 200 }}
-                  onChange={val => setDepartmentFilter(val)}
-                >
-                  <Option value="AI&DS">AI&DS</Option>
-                  <Option value="CSE">CSE</Option>
-                  <Option value="ECE">ECE</Option>
-                  <Option value="MECH">MECH</Option>
-                  <Option value="IT">IT</Option>
-                </Select>
-              </div>
-              <div>
-                <Text strong style={{ display: 'block', marginBottom: 4 }}>Year (Batch)</Text>
-                <Select
-                  allowClear
-                  placeholder="All Years"
-                  style={{ width: 150 }}
-                  onChange={val => setBatchFilter(val)}
-                >
-                  {uniqueBatches.sort().map(b => (
-                     <Option key={b} value={b}>{b}</Option>
-                  ))}
-                </Select>
-              </div>
-              <div>
-                <Text strong style={{ display: 'block', marginBottom: 4 }}>Section</Text>
-                <Select
-                  allowClear
-                  placeholder="All Sections"
-                  style={{ width: 120 }}
-                  onChange={val => setSectionFilter(val)}
-                >
-                  {uniqueSections.sort().map(s => (
-                     <Option key={s} value={s}>{s}</Option>
-                  ))}
-                </Select>
-              </div>
-              <Button type="primary" icon={<SearchOutlined />} onClick={fetchStudents}>Refresh View</Button>
-           </Space>
-        </Card>
-
-        <Card className="app-card" variant="borderless" styles={{ body: { padding: 0 } }} style={{ borderRadius: 12, overflow: 'hidden' }}>
-          <Table 
-            columns={columns} 
-            dataSource={students} 
-            rowKey="_id" 
-            loading={loading}
-            pagination={{ pageSize: 15, showSizeChanger: false }}
-            locale={{ emptyText: 'No students found matching filters.' }}
-          />
-        </Card>
+    <div className="fade-in-up">
+      <div className="admin-page-header">
+        <div>
+          <div className="admin-page-eyebrow">Student Directory</div>
+          <h1 className="admin-page-title">Manage Students</h1>
+          <p className="admin-page-description">
+            Search, filter, and view all student profiles across the university.
+          </p>
+        </div>
       </div>
+
+      <Card className="surface-panel" variant="borderless" style={{ marginBottom: 18 }}>
+        <div className="page-filters">
+          <Input
+            prefix={<SearchOutlined />}
+            placeholder="Search students, mentors, or registration numbers..."
+            value={query}
+            onChange={event => setQuery(event.target.value)}
+          />
+          <Select
+            allowClear
+            placeholder="All Departments"
+            value={departmentFilter || undefined}
+            onChange={value => setDepartmentFilter(value || '')}
+            options={uniqueDepartments.sort().map(department => ({ label: department, value: department }))}
+          />
+          <Select
+            allowClear
+            placeholder="All Years"
+            value={batchFilter || undefined}
+            onChange={value => setBatchFilter(value || '')}
+            options={uniqueBatches.sort().map(batch => ({ label: batch, value: batch }))}
+          />
+          <Select
+            allowClear
+            placeholder="All Sections"
+            value={sectionFilter || undefined}
+            onChange={value => setSectionFilter(value || '')}
+            options={uniqueSections.sort().map(section => ({ label: section, value: section }))}
+          />
+          <Button type="primary" icon={<ReloadOutlined />} onClick={fetchStudents}>
+            Refresh View
+          </Button>
+        </div>
+      </Card>
+
+      <Card className="surface-panel table-panel" variant="borderless">
+        <Table
+          columns={columns}
+          dataSource={filteredStudents}
+          rowKey="_id"
+          loading={loading}
+          pagination={{ pageSize: 10, showSizeChanger: false }}
+        />
+      </Card>
     </div>
   );
 }
-
-export default ManageStudentsPage;

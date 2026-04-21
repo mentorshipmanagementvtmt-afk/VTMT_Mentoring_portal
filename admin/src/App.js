@@ -24,6 +24,7 @@ import MentorDetailsPage from './pages/MentorDetailsPage.js';
 import CreateMentorPage from './pages/CreateMentorPage.js';
 import AttendanceMonitorPage from './pages/AttendanceMonitorPage.js';
 import ExamPerformancePage from './pages/ExamPerformancePage.js';
+import AdminShellLayout from './components/AdminShellLayout.jsx';
 
 function App() {
   return (
@@ -34,24 +35,26 @@ function App() {
           <Route path="/" element={<LoginPage />} />
 
           <Route element={<ProtectedRoute />}>
-            <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/attendance/monitor" element={<AttendanceMonitorPage />} />
-            <Route path="/departments" element={<ManageDepartmentsPage />} />
-            <Route path="/departments/:deptName" element={<DepartmentDetailsPage />} />
-            <Route path="/mentors/create" element={<CreateMentorPage />} />
-            <Route path="/mentor/:mentorId" element={<MentorDetailsPage />} />
-            <Route path="/mentor/:mentorId/mentees" element={<MenteeListPage />} />
-            <Route path="/mentee/:studentId" element={<MenteeDetailsPage />} />
-            <Route path="/performance" element={<PerformanceReportPage />} />
-            <Route path="/students" element={<ManageStudentsPage />} />
-            <Route path="/mentee/:studentId/assessments" element={<AssessmentLogPage />} />
-            <Route path="/mentee/:studentId/interventions" element={<InterventionLogPage />} />
-            <Route path="/mentee/:studentId/academic-problems" element={<AcademicProblemsLogPage />} />
-            <Route path="/mentee/:studentId/activities" element={<ActivitiesLogPage />} />
-            <Route path="/mentee/:studentId/exam-performance" element={<ExamPerformancePage />} />
-            <Route path="/hods" element={<ManageHodsPage />} />
-            <Route path="/hods/create" element={<CreateHodPage />} />
-            <Route path="/hod/:id" element={<HodDetailsPage />} />
+            <Route element={<AdminShellLayout />}>
+              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/attendance/monitor" element={<AttendanceMonitorPage />} />
+              <Route path="/departments" element={<ManageDepartmentsPage />} />
+              <Route path="/departments/:deptName" element={<DepartmentDetailsPage />} />
+              <Route path="/mentors/create" element={<CreateMentorPage />} />
+              <Route path="/mentor/:mentorId" element={<MentorDetailsPage />} />
+              <Route path="/mentor/:mentorId/mentees" element={<MenteeListPage />} />
+              <Route path="/mentee/:studentId" element={<MenteeDetailsPage />} />
+              <Route path="/performance" element={<PerformanceReportPage />} />
+              <Route path="/students" element={<ManageStudentsPage />} />
+              <Route path="/mentee/:studentId/assessments" element={<AssessmentLogPage />} />
+              <Route path="/mentee/:studentId/interventions" element={<InterventionLogPage />} />
+              <Route path="/mentee/:studentId/academic-problems" element={<AcademicProblemsLogPage />} />
+              <Route path="/mentee/:studentId/activities" element={<ActivitiesLogPage />} />
+              <Route path="/mentee/:studentId/exam-performance" element={<ExamPerformancePage />} />
+              <Route path="/hods" element={<ManageHodsPage />} />
+              <Route path="/hods/create" element={<CreateHodPage />} />
+              <Route path="/hod/:id" element={<HodDetailsPage />} />
+            </Route>
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

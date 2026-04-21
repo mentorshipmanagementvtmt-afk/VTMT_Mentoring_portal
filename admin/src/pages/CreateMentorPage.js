@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
+import { Button, Card, Col, Form, Input, Row, Select } from 'antd';
+import { useAuth } from '../context/AuthContext';
 import ProfileImageUpload from '../components/ProfileImageUpload';
 import api from '../api';
-import { Link, useNavigate } from 'react-router-dom';
-import { Card, Form, Input, Button, Row, Col, Typography,  Select } from 'antd';
-import { ArrowLeftOutlined } from '@ant-design/icons';
-import { useAuth } from '../context/AuthContext';
 
-const { Title } = Typography;
+const DEPARTMENTS = ['AI&DS', 'IT', 'CSE', 'MECH', 'CSBS', 'Cyber Security'];
 
 function CreateMentorPage() {
   const { user } = useAuth();
@@ -21,11 +20,12 @@ function CreateMentorPage() {
     setSaving(true);
     try {
       const formData = new FormData();
-      Object.keys(values).forEach(key => {
+      Object.keys(values).forEach((key) => {
         if (values[key]) {
           formData.append(key, values[key]);
         }
       });
+
       if (profileImage) {
         formData.append('profileImage', profileImage);
       }
@@ -33,8 +33,9 @@ function CreateMentorPage() {
       await api.post('/users/create-mentor', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
+
       toast.success(`Success! Mentor ${values.name} created.`);
-      navigate('/departments'); // Route back to departments page or dashboard
+      navigate('/departments');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to create faculty.');
     } finally {
@@ -43,85 +44,88 @@ function CreateMentorPage() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f8fafc', padding: '32px 16px' }}>
-      <div style={{ maxWidth: 800, margin: '0 auto' }}>
-        <Link to="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24, fontSize: 16, color: '#0ea5e9', textDecoration: 'none', fontWeight: 500 }}>
-          <ArrowLeftOutlined /> Back to Dashboard
-        </Link>
+    <div className="fade-in-up">
+      <div className="admin-page-header">
+        <div>
+          <div className="admin-page-eyebrow">Faculty Setup</div>
+          <h1 className="admin-page-title">Create New Faculty Profile</h1>
+          <p className="admin-page-description">
+            Register a new mentor profile and connect them to a department for mentorship allocation.
+          </p>
+        </div>
+      </div>
 
-        <Card 
-          title={<span style={{ fontWeight: 700, fontSize: 20 }}>Create New Faculty Profile</span>} 
-          variant="outlined" 
-          style={{ borderRadius: 16, background: '#ffffff', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }} 
-          styles={{ header: { borderBottom: '1px solid #e2e8f0', padding: '24px' }, body: { padding: '32px 24px' } }}
-        >
-          <Form
-            form={form}
-            layout="vertical"
-            onFinish={onFinish}
-            size="large"
-          >
-            <Row gutter={24}>
-              <Col xs={24} sm={12}>
-                <Form.Item label={<span style={{ fontWeight: 600 }}>Name</span>} name="name" rules={[{ required: true, message: 'Required' }]}>
-                  <Input style={{ borderRadius: 8 }} />
-                </Form.Item>
-              </Col>
-              
-              <Col xs={24} sm={12}>
-                <Form.Item label={<span style={{ fontWeight: 600 }}>Email</span>} name="email" rules={[{ required: true, message: 'Required' }, { type: 'email', message: 'Invalid' }]}>
-                  <Input type="email" style={{ borderRadius: 8 }} />
-                </Form.Item>
-              </Col>
-              
-              <Col xs={24} sm={12}>
-                <Form.Item label={<span style={{ fontWeight: 600 }}>MTS Number</span>} name="mtsNumber" rules={[{ required: true, message: 'Required' }]}>
-                  <Input style={{ borderRadius: 8 }} placeholder="e.g. MTS1234" />
-                </Form.Item>
-              </Col>
-              
-              <Col xs={24} sm={12}>
-                <Form.Item label={<span style={{ fontWeight: 600 }}>Designation</span>} name="designation" rules={[{ required: true, message: 'Required' }]}>
-                  <Input style={{ borderRadius: 8 }} placeholder="e.g. Assistant Professor" />
-                </Form.Item>
-              </Col>
-              
-              {isAdmin && (
-                <Col xs={24} sm={12}>
-                  <Form.Item label={<span style={{ fontWeight: 600 }}>Department</span>} name="department" rules={[{ required: true, message: 'Required' }]}>
-                    <Select placeholder="Select Department" style={{ width: '100%' }}>
-                      <Select.Option value="AI&DS">AI&DS</Select.Option>
-                      <Select.Option value="IT">IT</Select.Option>
-                      <Select.Option value="CSE">CSE</Select.Option>
-                      <Select.Option value="MECH">MECH</Select.Option>
-                      <Select.Option value="CSBS">CSBS</Select.Option>
-                      <Select.Option value="Cyber Security">Cyber Security</Select.Option>
-                    </Select>
+      <Card className="surface-panel" variant="borderless">
+        <Form form={form} layout="vertical" onFinish={onFinish}>
+          <Row gutter={[24, 24]}>
+            <Col xs={24} md={7}>
+              <div style={{ fontFamily: 'Manrope, sans-serif', fontWeight: 800, color: '#111c2d', marginBottom: 14 }}>
+                Profile Photo
+              </div>
+              <ProfileImageUpload onChange={setProfileImage} />
+              <p style={{ marginTop: 12, fontSize: 12, color: '#6b7280' }}>
+                Recommended size: 400x400. JPG or PNG under 2MB.
+              </p>
+            </Col>
+
+            <Col xs={24} md={17}>
+              <Row gutter={[18, 0]}>
+                <Col xs={24} md={12}>
+                  <Form.Item label="Full Name" name="name" rules={[{ required: true, message: 'Required' }]}>
+                    <Input placeholder="e.g. Dr. Marcus Thorne" />
                   </Form.Item>
                 </Col>
-              )}
-              
-              <Col xs={24} sm={isAdmin ? 12 : 24}>
-                <Form.Item label={<span style={{ fontWeight: 600 }}>Initial Password</span>} name="password" rules={[{ required: true, message: 'Required' }]}>
-                  <Input.Password style={{ borderRadius: 8 }} />
-                </Form.Item>
-              </Col>
-              
-              <Col xs={24} sm={12}>
-                <Form.Item label={<span style={{ fontWeight: 600 }}>Profile Image</span>}>
-                  <ProfileImageUpload onChange={setProfileImage} />
-                </Form.Item>
-              </Col>
-            </Row>
 
-            <Form.Item style={{ marginBottom: 0, marginTop: 16 }}>
-              <Button type="primary" htmlType="submit" loading={saving} style={{ background: '#0ea5e9', borderColor: '#0ea5e9', fontWeight: 600, borderRadius: 8, width: '100%' }}>
-                {saving ? 'Creating Profile...' : 'Confirm & Create Faculty'}
-              </Button>
-            </Form.Item>
-          </Form>
-        </Card>
-      </div>
+                <Col xs={24} md={12}>
+                  <Form.Item
+                    label="Institutional Email"
+                    name="email"
+                    rules={[{ required: true, message: 'Required' }, { type: 'email', message: 'Invalid email' }]}
+                  >
+                    <Input placeholder="m.thorne@institution.edu" />
+                  </Form.Item>
+                </Col>
+
+                <Col xs={24} md={12}>
+                  <Form.Item label="MTS Number" name="mtsNumber" rules={[{ required: true, message: 'Required' }]}>
+                    <Input placeholder="e.g. MTS-1092" />
+                  </Form.Item>
+                </Col>
+
+                <Col xs={24} md={12}>
+                  <Form.Item label="Designation" name="designation" rules={[{ required: true, message: 'Required' }]}>
+                    <Input placeholder="e.g. Assistant Professor" />
+                  </Form.Item>
+                </Col>
+
+                {isAdmin ? (
+                  <Col xs={24} md={12}>
+                    <Form.Item label="Department" name="department" rules={[{ required: true, message: 'Required' }]}>
+                      <Select
+                        placeholder="Select Department"
+                        options={DEPARTMENTS.map((department) => ({ label: department, value: department }))}
+                      />
+                    </Form.Item>
+                  </Col>
+                ) : null}
+
+                <Col xs={24} md={12}>
+                  <Form.Item label="Initial Password" name="password" rules={[{ required: true, message: 'Required' }]}>
+                    <Input.Password />
+                  </Form.Item>
+                </Col>
+              </Row>
+            </Col>
+          </Row>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 18 }}>
+            <Button onClick={() => navigate('/departments')}>Cancel</Button>
+            <Button type="primary" htmlType="submit" loading={saving}>
+              {saving ? 'Creating Profile...' : 'Create Faculty'}
+            </Button>
+          </div>
+        </Form>
+      </Card>
     </div>
   );
 }

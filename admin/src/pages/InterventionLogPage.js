@@ -1,49 +1,119 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { Typography, Spin, Empty } from 'antd';
-import { ArrowLeftOutlined } from '@ant-design/icons';
-import InterventionForm from '../components/InterventionForm';
+import React, { useEffect, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
+import { Avatar, Button, Card, Empty, Spin, Tag } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
 import api from '../api';
 
-function InterventionLogPage() {
+const categoryTone = {
+  'Slow learner': { color: '#ba1a1a', background: '#ffe7e5' },
+  'Fast learner': { color: '#3323cc', background: '#ece9ff' }
+};
+
+export default function InterventionLogPage() {
   const { studentId } = useParams();
   const [interventions, setInterventions] = useState([]);
+  const [student, setStudent] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchInterventions = async () => {
+    const fetchData = async () => {
       try {
-        const response = await api.get(`/interventions/${studentId}`);
-        setInterventions(response.data);
-      } catch (err) {
-        console.error(err);
+        const [interventionRes, studentRes] = await Promise.all([
+          api.get(`/interventions/${studentId}`),
+          api.get(`/students/${studentId}/details`)
+        ]);
+
+        setInterventions(interventionRes.data || []);
+        setStudent(studentRes.data?.profile || null);
+      } catch (error) {
+        console.error(error);
       } finally {
         setLoading(false);
       }
     };
-    fetchInterventions();
+
+    fetchData();
   }, [studentId]);
 
-  if (loading) return <div style={{textAlign: 'center', padding: 50}}><Spin /></div>;
+  if (loading) {
+    return <Spin />;
+  }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f8fafc', padding: '32px 16px' }}>
-      <div style={{ maxWidth: 1000, margin: '0 auto' }}>
-        <Link to={`/mentee/${studentId}`} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24, fontSize: 16, color: '#0ea5e9', textDecoration: 'none', fontWeight: 500 }}><ArrowLeftOutlined /> Back to Profile</Link>
-        <Typography.Title level={2}>Mentorship Intervention Log</Typography.Title>
-        {interventions.length === 0 ? (
-           <Empty description="No interventions recorded yet." />
-        ) : (
-           interventions.map(int => (
-             <div key={int._id} style={{ marginBottom: 24, padding: 24, background: '#fff', borderRadius: 8, border: '1px solid #e2e8f0' }}>
-                <fieldset disabled={true} style={{ border: 'none', padding: 0, margin: 0 }}>
-                   <InterventionForm studentId={studentId} interventionToEdit={int} onCancel={() => {}} onInterventionAdded={() => {}} />
-                </fieldset>
-             </div>
-           ))
-        )}
+    <div className="fade-in-up">
+      <div className="admin-page-header">
+        <div>
+          <div className="admin-page-eyebrow">Student Journey</div>
+          <h1 className="admin-page-title">Mentorship Intervention Log</h1>
+          <p className="admin-page-description">
+            Chronological record of academic and behavioral interventions, actions taken, and measurable impact.
+          </p>
+        </div>
+
+        <div className="admin-actions">
+          <Link to={`/mentee/${studentId}`}>
+            <Button>Back to Profile</Button>
+          </Link>
+          <Button type="primary" icon={<PlusOutlined />}>
+            Log New Intervention
+          </Button>
+        </div>
       </div>
+
+      {student && (
+        <Card className="surface-panel" variant="borderless" style={{ marginBottom: 18 }}>
+          <div className="avatar-cell">
+            <Avatar src={student.profileImage?.url || undefined} size={64}>
+              {student.name?.slice(0, 2).toUpperCase()}
+            </Avatar>
+            <div>
+              <div style={{ fontFamily: 'Manrope, sans-serif', fontWeight: 800, fontSize: 24 }}>{student.name}</div>
+              <div style={{ color: '#5f6675', marginTop: 4 }}>
+                Cohort {student.batch} • {student.department} • Mentee ID: {student.registerNumber}
+              </div>
+            </div>
+            <div className="chip-group" style={{ marginLeft: 'auto' }}>
+              <span className="reference-chip">Active Status</span>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {interventions.length === 0 ? (
+        <Card className="surface-panel"><Empty description="No interventions recorded yet." /></Card>
+      ) : (
+        <div className="timeline-list">
+          {interventions.map(entry => {
+            const tone = categoryTone[entry.category] || { color: '#111c2d', background: '#f3f4f6' };
+            return (
+              <div key={entry._id} className="timeline-item">
+                <div className="timeline-date">{entry.monthYear}</div>
+                <Card className="surface-panel timeline-card" variant="borderless">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', marginBottom: 14 }}>
+                    <Tag color="default" style={{ borderRadius: 999, background: tone.background, color: tone.color, borderColor: 'transparent', fontWeight: 700 }}>
+                      {entry.category}
+                    </Tag>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 16 }}>
+                    <div>
+                      <div style={{ fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#6b7280', fontWeight: 700, marginBottom: 10 }}>
+                        Action Taken
+                      </div>
+                      <div style={{ color: '#20242f', lineHeight: 1.7 }}>{entry.actionTaken}</div>
+                    </div>
+                    <div style={{ background: '#f8f6fb', borderRadius: 16, padding: 16 }}>
+                      <div style={{ fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#6b7280', fontWeight: 700, marginBottom: 10 }}>
+                        Measured Impact
+                      </div>
+                      <div style={{ color: '#20242f', lineHeight: 1.7 }}>{entry.impact}</div>
+                    </div>
+                  </div>
+                </Card>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
-export default InterventionLogPage;

@@ -1,13 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import api from '../api';
-import { Link } from 'react-router-dom';
-import { Card, Typography, Spin, Empty, List } from 'antd';
-import { ArrowLeftOutlined, TrophyOutlined } from '@ant-design/icons';
+import { Avatar, Button, Card, Empty, Progress, Typography } from 'antd';
+import { DownloadOutlined } from '@ant-design/icons';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
-function PerformanceReportPage() {
+export default function PerformanceReportPage() {
   const [reportData, setReportData] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -15,82 +14,137 @@ function PerformanceReportPage() {
     const fetchReport = async () => {
       try {
         const response = await api.get('/assessments/mentor/performance');
-        setReportData(response.data);
-        setLoading(false);
-      } catch (err) {
+        setReportData(response.data || []);
+      } catch (error) {
         toast.error('Failed to fetch performance report.');
+      } finally {
         setLoading(false);
       }
     };
+
     fetchReport();
   }, []);
 
-  if (loading) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#f8fafc' }}>
-        <Spin size="large" />
-      </div>
-    );
-  }
+  const topThree = useMemo(() => reportData.slice(0, 3), [reportData]);
+  const roster = useMemo(() => reportData.slice(3), [reportData]);
+  const highestScore = reportData[0]?.totalScore || 1;
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f8fafc', padding: '32px 16px' }}>
-      <div style={{ maxWidth: 800, margin: '0 auto' }}>
-        <Link to="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24, fontSize: 16, color: '#0ea5e9', textDecoration: 'none', fontWeight: 500 }}>
-          <ArrowLeftOutlined /> Back to Dashboard
-        </Link>
+    <div className="fade-in-up">
+      <div className="admin-page-header">
+        <div>
+          <div className="admin-page-eyebrow">Cohort Analytics</div>
+          <h1 className="admin-page-title">Performance Report</h1>
+          <p className="admin-page-description">Cohort ranking and score distribution based on the latest assessment records.</p>
+        </div>
 
-        <Card variant="borderless" style={{ borderRadius: 16, boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
-          <div style={{ borderBottom: '1px solid #e2e8f0', paddingBottom: 16, marginBottom: 24 }}>
-            <Title level={3} style={{ margin: 0, color: '#0f172a' }}>Mentees Performance Report</Title>
-            <Text type="secondary">Students are ranked by total score from their latest assessment.</Text>
+        <div className="admin-actions">
+          <Button>This Quarter</Button>
+          <Button type="primary" icon={<DownloadOutlined />}>Export</Button>
+        </div>
+      </div>
+
+      {reportData.length === 0 && !loading ? (
+        <Card className="surface-panel"><Empty description="No records found." /></Card>
+      ) : (
+        <>
+          <div className="leader-grid">
+            {topThree.map((student, index) => (
+              <Card
+                key={student._id || student.registerNumber}
+                className={`surface-panel leader-card ${index === 0 ? 'primary' : ''}`}
+                variant="borderless"
+              >
+                <div style={{ fontSize: 12, color: '#6b7280', fontWeight: 700 }}>Rank #{index + 1}</div>
+                <Avatar size={index === 0 ? 92 : 78} style={{ marginTop: 18, background: '#edf2ff', color: '#24324a' }}>
+                  {student.name?.slice(0, 2).toUpperCase()}
+                </Avatar>
+                <div style={{ marginTop: 16, fontFamily: 'Manrope, sans-serif', fontWeight: 800, fontSize: index === 0 ? 30 : 24, color: '#111c2d' }}>
+                  {student.name}
+                </div>
+                <div style={{ color: '#6b7280', marginTop: 4 }}>#{student.registerNumber}</div>
+                <div style={{ marginTop: 16 }}>
+                  <span className="reference-chip">{student.totalScore} pts</span>
+                </div>
+              </Card>
+            ))}
           </div>
 
-          {reportData.length === 0 ? (
-            <Empty description="No performance data found for any mentees." style={{ margin: '40px 0' }} />
-          ) : (
-            <List
-              itemLayout="horizontal"
-              dataSource={reportData}
-              renderItem={(student, index) => (
-                <List.Item
-                  style={{
-                    background: index === 0 ? '#eff6ff' : index === 1 ? '#f8fafc' : index === 2 ? '#fdf8f6' : '#ffffff',
-                    border: '1px solid #e2e8f0',
-                    borderRadius: 12,
-                    marginBottom: 16,
-                    padding: '16px 24px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between'
-                  }}
-                >
-                  <List.Item.Meta
-                    avatar={
-                      <div style={{ 
-                        width: 48, height: 48, borderRadius: '50%', background: index < 3 ? '#0ea5e9' : '#e2e8f0', 
-                        color: index < 3 ? '#fff' : '#64748b', display: 'flex', justifyContent: 'center', alignItems: 'center',
-                        fontSize: 20, fontWeight: 'bold'
-                      }}>
-                        {index === 0 ? <TrophyOutlined style={{ color: '#fbbf24', fontSize: 24 }}/> : index === 1 ? <TrophyOutlined style={{ color: '#94a3b8', fontSize: 24 }}/> : index === 2 ? <TrophyOutlined style={{ color: '#b45309', fontSize: 24 }}/> : `#${index + 1}`}
+          <div className="leaderboard-layout">
+            <Card
+              className="surface-panel"
+              variant="borderless"
+              title={<span style={{ fontFamily: 'Manrope, sans-serif', fontWeight: 800 }}>Full Roster Ranking</span>}
+            >
+              {loading && roster.length > 0 ? (
+                <p style={{ margin: 0, color: '#5f6675' }}>Loading records...</p>
+              ) : roster.length === 0 ? (
+                <Empty description="No records found." />
+              ) : (
+                <div style={{ display: 'grid', gap: 12 }}>
+                  {roster.map((student, index) => (
+                    <div
+                      key={student._id || `${student.registerNumber}-${index}`}
+                      style={{
+                        border: '1px solid #ece8ee',
+                        borderRadius: 14,
+                        padding: '12px 14px'
+                      }}
+                    >
+                      <div className="avatar-cell" style={{ width: '100%' }}>
+                        <div style={{ width: 32, fontWeight: 800, color: '#6b7280' }}>{index + 4}</div>
+                        <Avatar style={{ background: '#edf2ff', color: '#24324a' }}>
+                          {student.name?.slice(0, 2).toUpperCase()}
+                        </Avatar>
+                        <div style={{ minWidth: 0, flex: 1 }}>
+                          <div style={{ fontWeight: 700 }}>{student.name}</div>
+                          <div style={{ fontSize: 12, color: '#6b7280' }}>#{student.registerNumber} - {student.academicYear}</div>
+                        </div>
+                        <div style={{ fontFamily: 'Manrope, sans-serif', fontWeight: 800, fontSize: 22 }}>
+                          {student.totalScore}
+                        </div>
                       </div>
-                    }
-                    title={<Title level={4} style={{ margin: 0, color: '#0f172a' }}>{student.name}</Title>}
-                    description={<Text type="secondary">Reg No: {student.registerNumber} | Latest: <span style={{fontWeight: 600, color: '#334155'}}>{student.academicYear}</span></Text>}
-                    style={{ margin: 0 }}
-                  />
-                  <div style={{ textAlign: 'center', padding: '8px 16px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, boxShadow: '0 1px 2px rgba(0,0,0,0.05)', minWidth: 80 }}>
-                    <div style={{ fontSize: 28, fontWeight: 900, color: '#0ea5e9', lineHeight: 1 }}>{student.totalScore}</div>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', marginTop: 4 }}>Total Score</div>
-                  </div>
-                </List.Item>
+                    </div>
+                  ))}
+                </div>
               )}
-            />
-          )}
-        </Card>
-      </div>
+            </Card>
+
+            <div className="dashboard-side-stack">
+              <Card
+                className="surface-panel"
+                variant="borderless"
+                title={<span style={{ fontFamily: 'Manrope, sans-serif', fontWeight: 800 }}>Cohort Score Distribution</span>}
+              >
+                {reportData.slice(0, 4).map((student) => (
+                  <div key={student.registerNumber} style={{ marginBottom: 16 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                      <Text>{student.name}</Text>
+                      <Text strong>{Math.round((student.totalScore / highestScore) * 100)}%</Text>
+                    </div>
+                    <Progress
+                      percent={Math.round((student.totalScore / highestScore) * 100)}
+                      showInfo={false}
+                      strokeColor="#4b41e1"
+                      railColor="#ece8ee"
+                    />
+                  </div>
+                ))}
+              </Card>
+
+              <Card className="surface-panel" variant="borderless" style={{ background: '#1e293b', color: '#fff' }}>
+                <div style={{ fontFamily: 'Manrope, sans-serif', fontWeight: 800, fontSize: 20, color: '#fff', marginBottom: 8 }}>
+                  Key Insight
+                </div>
+                <p style={{ margin: 0, color: '#d8e3fb', lineHeight: 1.7 }}>
+                  The current cohort leader is ahead by {Math.max((reportData[0]?.totalScore || 0) - (reportData[1]?.totalScore || 0), 0)} points,
+                  which suggests a meaningful performance gap in the latest evaluation cycle.
+                </p>
+              </Card>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
-
-export default PerformanceReportPage;
