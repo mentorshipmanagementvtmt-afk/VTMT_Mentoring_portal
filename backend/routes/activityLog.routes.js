@@ -59,7 +59,8 @@ router.get('/:studentId', protect, async (req, res) => {
 
     const activities = await ActivityLog.find(filter)
       .populate('mentorId', 'name')
-      .sort({ semester: 1, slNo: 1, date: 1, createdAt: 1 });
+      .sort({ semester: 1, slNo: 1, date: 1, createdAt: 1 })
+      .lean();
 
     return res.status(200).json(activities);
   } catch (error) {

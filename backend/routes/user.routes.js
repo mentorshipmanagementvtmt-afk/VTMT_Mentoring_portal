@@ -107,7 +107,8 @@ router.get('/mentors', protect, isAdminOrHod, async (req, res) => {
 
     const mentors = await User.find(query)
       .select('name email mtsNumber designation department profileImage')
-      .sort({ name: 1 });
+      .sort({ name: 1 })
+      .lean();
 
     res.status(200).json(mentors);
   } catch (error) {
@@ -205,7 +206,7 @@ router.get('/mentor/:mentorId', protect, isAdminOrHod, async (req, res) => {
       query.department = req.user.department;
     }
 
-    const mentor = await User.findOne(query).select('name email mtsNumber designation department profileImage');
+    const mentor = await User.findOne(query).select('name email mtsNumber designation department profileImage').lean();
 
     if (!mentor) {
       return res.status(404).json({ message: 'Mentor not found.' });
@@ -292,7 +293,7 @@ router.put('/mentor/:mentorId', protect, isAdminOrHod, upload.single('profileIma
 
 router.get('/hods', protect, isAdmin, async (req, res) => {
   try {
-    const hods = await User.find({ role: 'hod' }).select('-password');
+    const hods = await User.find({ role: 'hod' }).select('-password').lean();
     res.status(200).json(hods);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -307,7 +308,7 @@ router.get('/hod-by-department', protect, isAdminOrHod, async (req, res) => {
       return res.status(403).json({ message: 'Forbidden' });
     }
 
-    const hod = await User.findOne({ role: 'hod', department: deptName }).select('-password');
+    const hod = await User.findOne({ role: 'hod', department: deptName }).select('-password').lean();
     if (!hod) return res.status(404).json({ message: 'HOD not found for this department' });
 
     res.status(200).json(hod);
@@ -415,7 +416,7 @@ router.put('/hods/reassign', protect, isAdmin, async (req, res) => {
 
 router.get('/profile', protect, async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).select('-password');
+    const user = await User.findById(req.user._id).select('-password').lean();
     if (!user) return res.status(404).json({ message: 'User not found.' });
     res.status(200).json(user);
   } catch (error) {

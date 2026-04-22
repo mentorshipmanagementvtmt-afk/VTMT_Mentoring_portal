@@ -50,11 +50,16 @@ function LoginPage() {
         variant="borderless"
       >
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+          <img
+            src="/brand-home-wordmark.webp"
+            alt="Vel Tech Multi Tech"
+            style={{ width: '100%', maxWidth: 340, marginBottom: 20 }}
+          />
           <Title level={3} style={{ color: '#581c87', margin: 0, fontWeight: 700 }}>
-            HOD Management Portal
+            Vel Tech HOD Portal
           </Title>
           <Text type="secondary" style={{ color: '#7e22ce' }}>
-            Enter your HOD credentials to access the dashboard.
+            Vel Tech Multi Tech Academic Mentorship Portal
           </Text>
         </div>
 
@@ -108,6 +113,12 @@ function LoginPage() {
             </Button>
           </Form.Item>
         </Form>
+
+        <div style={{ textAlign: 'center', marginTop: 20 }}>
+          <a href="https://trakshard.com" target="_blank" rel="noreferrer" style={{ fontSize: 12, color: '#7e22ce', textDecoration: 'none' }}>
+            Developed by Trakshard
+          </a>
+        </div>
       </Card>
     </main>
   );

@@ -2,8 +2,11 @@ const express = require('express');
 const router = express.Router();
 const WeeklyAttendance = require('../models/attendance.model.js');
 const Student = require('../models/student.model.js');
-const User = require('../models/user.model.js');
-const { protect, isAdminOrHod } = require('../middleware/auth.middleware.js');
+const { protect } = require('../middleware/auth.middleware.js');
+const { buildAttendanceOverview } = require('../utils/attendanceMetrics.js');
+
+const canViewAttendanceOverview = (user) =>
+    user && ['admin', 'hod', 'mentor'].includes(user.role);
 
 // 1. Bulk submit attendance (Mentor)
 router.post('/bulk', protect, async (req, res) => {
@@ -48,7 +51,22 @@ router.post('/bulk', protect, async (req, res) => {
 // 2. Get student history
 router.get('/student/:studentId', protect, async (req, res) => {
     try {
-        const records = await WeeklyAttendance.find({ studentId: req.params.studentId }).sort({ weekStartDate: -1 });
+        const student = await Student.findById(req.params.studentId).select('currentMentor department attendanceAction').lean();
+        if (!student) {
+            return res.status(404).json({ message: 'Student not found.' });
+        }
+
+        if (req.user.role === 'mentor' && String(student.currentMentor) !== String(req.user._id)) {
+            return res.status(403).json({ message: 'You are not authorized to view this student attendance.' });
+        }
+
+        if (req.user.role === 'hod' && student.department !== req.user.department) {
+            return res.status(403).json({ message: 'You are not authorized to view this student attendance.' });
+        }
+
+        const records = await WeeklyAttendance.find({ studentId: req.params.studentId })
+            .sort({ weekStartDate: -1 })
+            .lean();
         
         let cumulativeHeld = 0;
         let cumulativeAttended = 0;
@@ -61,150 +79,108 @@ router.get('/student/:studentId', protect, async (req, res) => {
 
         res.status(200).json({
             records,
-            cumulativePercentage: Number(cumulativePercentage.toFixed(2))
+            cumulativePercentage: Number(cumulativePercentage.toFixed(2)),
+            attendanceAction: student.attendanceAction?.note
+                ? {
+                    note: student.attendanceAction.note,
+                    updatedAt: student.attendanceAction.updatedAt || null,
+                    updatedBy: student.attendanceAction.updatedBy || null
+                }
+                : null
         });
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 });
 
-// 3. Monitor Dashboard (Admin & HOD)
-router.get('/monitor', protect, isAdminOrHod, async (req, res) => {
+// 3. Unified overview for attendance monitoring pages (Admin, HOD, Mentor)
+router.get('/overview', protect, async (req, res) => {
     try {
-        const user = req.user;
-        const query = { role: 'mentor' };
-        if (user.role === 'hod') {
-            query.department = user.department;
+        if (!canViewAttendanceOverview(req.user)) {
+            return res.status(403).json({ message: 'Not authorized to view attendance overview.' });
         }
 
-        const mentors = await User.find(query).select('name department email mtsNumber profileImage');
-        const metrics = [];
-        const hodCache = {};
-
-        for (const mentor of mentors) {
-            // Fetch HOD for this department 
-            if (!hodCache[mentor.department]) {
-                const searchDept = mentor.department ? mentor.department.trim() : '';
-                const hod = await User.findOne({ 
-                    role: 'hod', 
-                    department: { $regex: new RegExp(`^${searchDept.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } 
-                }).select('name');
-                hodCache[mentor.department] = hod ? hod.name : 'Unassigned';
-            }
-
-            // Find latest attendance record by this mentor
-            const lastRecord = await WeeklyAttendance.findOne({ mentorId: mentor._id }).sort({ createdAt: -1 });
-            
-            let missingWeeksFlag = true; // Default to true if they never logged
-            let lastLoggedDate = null;
-            if (lastRecord) {
-                lastLoggedDate = lastRecord.createdAt;
-                const daysSinceLog = (Date.now() - new Date(lastLoggedDate).getTime()) / (1000 * 3600 * 24);
-                missingWeeksFlag = daysSinceLog > 7; // Flag if older than 7 days
-            }
-
-            // Find mentees assigned to this mentor
-            const mentees = await Student.find({ currentMentor: mentor._id }).select('_id name');
-            let lowAttendanceCount = 0;
-            let totalHeld = 0;
-            let totalAttended = 0;
-
-            for (const mentee of mentees) {
-                const recs = await WeeklyAttendance.find({ studentId: mentee._id });
-                let pHeld = 0;
-                let pAtt = 0;
-                recs.forEach(r => { pHeld += r.classesHeld; pAtt += r.classesAttended; });
-                
-                totalHeld += pHeld;
-                totalAttended += pAtt;
-
-                if (pHeld > 0) {
-                    const pct = (pAtt / pHeld) * 100;
-                    if (pct < 75) lowAttendanceCount++;
-                }
-            }
-
-            const avgMenteePercentage = totalHeld > 0 ? (totalAttended / totalHeld) * 100 : 0;
-
-            metrics.push({
-                mentorId: mentor._id,
-                mentorName: mentor.name,
-                mentorEmail: mentor.email,
-                mentorMts: mentor.mtsNumber,
-                mentorProfileImage: mentor.profileImage,
-                department: mentor.department,
-                hodName: hodCache[mentor.department],
-                lastLoggedDate,
-                isFlagged: missingWeeksFlag || (avgMenteePercentage > 0 && avgMenteePercentage < 75), // Flag if not logged or avg < 75%
-                missingWeeksFlag,
-                avgMenteePercentage: Number(avgMenteePercentage.toFixed(2)),
-                lowAttendanceCount,
-                totalMentees: mentees.length
-            });
-        }
-
-        res.status(200).json(metrics);
+        const overview = await buildAttendanceOverview(req.user);
+        res.status(200).json(overview);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 });
 
-// 4. Low attendance students with mentor details (Admin & HOD)
-router.get('/low-attendance-students', protect, isAdminOrHod, async (req, res) => {
+// 4. Update attendance action for a student
+router.put('/student/:studentId/action', protect, async (req, res) => {
     try {
-        const studentQuery = {};
-        if (req.user.role === 'hod') {
-            studentQuery.department = req.user.department;
+        const note = String(req.body?.note || '').trim();
+
+        if (!note) {
+            return res.status(400).json({ message: 'Action note is required.' });
         }
 
-        const students = await Student.find(studentQuery)
-            .select('_id name registerNumber department batch section currentMentor')
-            .populate('currentMentor', 'name email mtsNumber profileImage');
-
-        const lowAttendanceStudents = [];
-
-        for (const student of students) {
-            const records = await WeeklyAttendance.find({ studentId: student._id }).select('classesHeld classesAttended');
-            const totals = records.reduce(
-                (acc, item) => {
-                    acc.held += item.classesHeld || 0;
-                    acc.attended += item.classesAttended || 0;
-                    return acc;
-                },
-                { held: 0, attended: 0 }
-            );
-
-            if (!totals.held) {
-                continue;
-            }
-
-            const cumulativeAttendance = Number(((totals.attended / totals.held) * 100).toFixed(2));
-            if (cumulativeAttendance >= 75) {
-                continue;
-            }
-
-            lowAttendanceStudents.push({
-                studentId: student._id,
-                studentName: student.name,
-                registerNumber: student.registerNumber,
-                department: student.department,
-                batch: student.batch || '',
-                section: student.section || '',
-                cumulativeAttendance,
-                mentor: student.currentMentor
-                    ? {
-                        mentorId: student.currentMentor._id,
-                        name: student.currentMentor.name,
-                        email: student.currentMentor.email,
-                        mtsNumber: student.currentMentor.mtsNumber,
-                        profileImage: student.currentMentor.profileImage
-                    }
-                    : null
-            });
+        const student = await Student.findById(req.params.studentId);
+        if (!student) {
+            return res.status(404).json({ message: 'Student not found.' });
         }
 
-        lowAttendanceStudents.sort((a, b) => a.cumulativeAttendance - b.cumulativeAttendance);
-        res.status(200).json(lowAttendanceStudents);
+        if (req.user.role === 'mentor' && String(student.currentMentor) !== String(req.user._id)) {
+            return res.status(403).json({ message: 'You are not authorized to update this student attendance action.' });
+        }
+
+        if (req.user.role === 'hod' && student.department !== req.user.department) {
+            return res.status(403).json({ message: 'You are not authorized to update this student attendance action.' });
+        }
+
+        if (!['admin', 'hod', 'mentor'].includes(req.user.role)) {
+            return res.status(403).json({ message: 'Not authorized to update attendance action.' });
+        }
+
+        student.attendanceAction = {
+            note,
+            updatedAt: new Date(),
+            updatedBy: req.user._id
+        };
+
+        await student.save();
+
+        res.status(200).json({
+            message: 'Attendance action updated successfully.',
+            attendanceAction: {
+                note: student.attendanceAction.note,
+                updatedAt: student.attendanceAction.updatedAt,
+                updatedBy: {
+                    _id: req.user._id,
+                    name: req.user.name,
+                    role: req.user.role
+                }
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+});
+
+// 5. Monitor Dashboard (Admin, HOD, Mentor scoped)
+router.get('/monitor', protect, async (req, res) => {
+    try {
+        if (!canViewAttendanceOverview(req.user)) {
+            return res.status(403).json({ message: 'Not authorized to view attendance monitor.' });
+        }
+
+        const overview = await buildAttendanceOverview(req.user);
+        res.status(200).json(overview.monitor);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+});
+
+// 6. Low attendance students with mentor details (Admin, HOD, Mentor scoped)
+router.get('/low-attendance-students', protect, async (req, res) => {
+    try {
+        if (!canViewAttendanceOverview(req.user)) {
+            return res.status(403).json({ message: 'Not authorized to view low attendance students.' });
+        }
+
+        const overview = await buildAttendanceOverview(req.user);
+        res.status(200).json(overview.lowAttendanceStudents);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
     }

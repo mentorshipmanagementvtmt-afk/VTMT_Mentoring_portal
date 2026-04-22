@@ -50,11 +50,16 @@ function LoginPage() {
         variant="borderless"
       >
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+          <img
+            src="/brand-home-wordmark.webp"
+            alt="Vel Tech Multi Tech"
+            style={{ width: '100%', maxWidth: 340, marginBottom: 20 }}
+          />
           <Title level={3} style={{ color: '#0f172a', margin: 0, fontWeight: 700 }}>
-            System Admin Portal
+            Vel Tech Admin
           </Title>
           <Text type="secondary" style={{ color: '#64748b' }}>
-            Restricted Access. Please sign in securely.
+            Vel Tech Multi Tech Academic Mentorship Portal
           </Text>
         </div>
 
@@ -108,6 +113,12 @@ function LoginPage() {
             </Button>
           </Form.Item>
         </Form>
+
+        <div style={{ textAlign: 'center', marginTop: 20 }}>
+          <a href="https://trakshard.com" target="_blank" rel="noreferrer" style={{ fontSize: 12, color: '#64748b', textDecoration: 'none' }}>
+            Developed by Trakshard
+          </a>
+        </div>
       </Card>
     </main>
   );

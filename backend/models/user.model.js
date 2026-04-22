@@ -50,6 +50,9 @@ const userSchema = new Schema({
 
 }, { timestamps: true }); // Automatically adds 'createdAt' and 'updatedAt' fields
 
+// Read-heavy filters for role/department views
+userSchema.index({ role: 1, department: 1 });
+
 // This creates the 'User' model in our database
 const User = mongoose.model('User', userSchema);
 

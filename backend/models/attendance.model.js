@@ -34,6 +34,7 @@ const weeklyAttendanceSchema = new Schema({
 
 // Ensure a mentor can only submit one attendance record per student per week
 weeklyAttendanceSchema.index({ studentId: 1, weekStartDate: 1 }, { unique: true });
+weeklyAttendanceSchema.index({ mentorId: 1, createdAt: -1 });
 
 const WeeklyAttendance = mongoose.model('WeeklyAttendance', weeklyAttendanceSchema);
 module.exports = WeeklyAttendance;

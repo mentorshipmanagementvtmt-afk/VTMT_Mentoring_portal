@@ -74,6 +74,8 @@ const academicLogSchema = new Schema(
   { timestamps: true }
 );
 
+academicLogSchema.index({ studentId: 1, semester: 1, slNo: 1, date: 1, createdAt: 1 });
+
 // Auto-generate studentName + slNo before saving
 academicLogSchema.pre('save', async function (next) {
   // If studentName is empty → autofill

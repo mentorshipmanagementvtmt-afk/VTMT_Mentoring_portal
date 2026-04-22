@@ -40,6 +40,7 @@ const activityLogRoutes = require('./routes/activityLog.routes.js');
 const analyticsRoutes = require('./routes/analytics.routes.js');
 const attendanceRoutes = require('./routes/attendance.routes.js');
 const examRecordRoutes = require('./routes/examRecord.routes.js');
+const departmentRoutes = require('./routes/department.routes.js');
 
 app.use('/api/users', userRoutes);
 app.use('/api/students', studentRoutes);
@@ -50,12 +51,19 @@ app.use('/api/activity-logs', activityLogRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/exam-records', examRecordRoutes);
+app.use('/api/departments', departmentRoutes);
 
 const connectDB = async () => {
   try {
     const dbUrl = process.env.DATABASE_URL;
     // family: 4 forces IPv4, bypassing the known Render/Node issue with DNS SRV lookups (ENOTFOUND)
-    await mongoose.connect(dbUrl, { family: 4 });
+    await mongoose.connect(dbUrl, {
+      family: 4,
+      maxPoolSize: 20,
+      minPoolSize: 5,
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000
+    });
     console.log('✅ MongoDB connected successfully!');
   } catch (error) {
     console.error('❌ Error connecting to MongoDB:', error.message);

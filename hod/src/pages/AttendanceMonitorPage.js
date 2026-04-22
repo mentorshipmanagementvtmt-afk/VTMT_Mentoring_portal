@@ -19,12 +19,9 @@ function AttendanceMonitorPage() {
 
   const fetchMonitoringData = async () => {
     try {
-      const [monitorResponse, lowAttendanceResponse] = await Promise.all([
-        api.get('/attendance/monitor'),
-        api.get('/attendance/low-attendance-students')
-      ]);
-      setData(monitorResponse.data);
-      setLowAttendanceStudents(lowAttendanceResponse.data);
+      const { data } = await api.get('/attendance/overview');
+      setData(data.monitor || []);
+      setLowAttendanceStudents(data.lowAttendanceStudents || []);
     } catch (err) {
       toast.error('Failed to load attendance monitoring data.');
     } finally {
@@ -154,6 +151,22 @@ function AttendanceMonitorPage() {
       key: 'cumulativeAttendance',
       render: value => <Tag color="error">{value}%</Tag>,
       sorter: (a, b) => a.cumulativeAttendance - b.cumulativeAttendance
+    },
+    {
+      title: 'Mentor Action',
+      key: 'attendanceAction',
+      render: (_, record) =>
+        record.attendanceAction?.note ? (
+          <div style={{ maxWidth: 320 }}>
+            <Text>{record.attendanceAction.note}</Text>
+            <br />
+            <Text type="secondary" style={{ fontSize: 12 }}>
+              {record.attendanceAction.updatedBy?.name || 'Mentor'}
+            </Text>
+          </div>
+        ) : (
+          <Text type="secondary">No action recorded yet</Text>
+        )
     }
   ];
 

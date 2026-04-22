@@ -6,3 +6,8 @@ node_modules
 dist
 build
 .DS_Store
+.backups/
+.sixth/
+error.log
+error.txt
+error2.txt

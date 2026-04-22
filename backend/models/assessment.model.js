@@ -91,6 +91,10 @@ const assessmentSchema = new Schema({
 
 }, { timestamps: true }); // Automatically adds 'createdAt' and 'updatedAt'
 
+// Speeds up latest-assessment and yearly upsert access patterns
+assessmentSchema.index({ studentId: 1, updatedAt: -1 });
+assessmentSchema.index({ studentId: 1, academicYear: 1 });
+
 // This creates the 'Assessment' model in our database
 const Assessment = mongoose.model('Assessment', assessmentSchema);
 

@@ -108,7 +108,8 @@ router.get('/', protect, isAdminOrHod, async (req, res) => {
 
     const students = await Student.find(filter)
       .select('name registerNumber vmNumber department batch section currentMentor')
-      .populate('currentMentor', 'name mtsNumber');
+      .populate('currentMentor', 'name mtsNumber')
+      .lean();
       
     res.status(200).json(students);
   } catch (error) {
@@ -124,7 +125,7 @@ router.get('/my-mentees', protect, async (req, res) => {
     const mentorId = req.user._id;
     const mentees = await Student.find({ currentMentor: mentorId }).select(
       'name registerNumber vmNumber department batch section'
-    );
+    ).lean();
     res.status(200).json(mentees);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -139,7 +140,7 @@ router.get('/mentor/:mentorId', protect, isAdminOrHod, async (req, res) => {
     const { mentorId } = req.params;
     const mentees = await Student.find({ currentMentor: mentorId }).select(
       'name registerNumber vmNumber department batch section'
-    );
+    ).lean();
     res.status(200).json(mentees);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -163,8 +164,10 @@ router.get('/:studentId/details', protect, async (req, res) => {
       return res.status(403).json({ message: 'You are not authorized to view this student.' });
     }
 
-    const assessments = await Assessment.find({ studentId }).sort({ academicYear: 1 });
-    const interventions = await Intervention.find({ studentId }).sort({ createdAt: -1 });
+    const [assessments, interventions] = await Promise.all([
+      Assessment.find({ studentId }).sort({ academicYear: 1 }).lean(),
+      Intervention.find({ studentId }).sort({ createdAt: -1 }).lean()
+    ]);
 
     res.status(200).json({
       profile: student,

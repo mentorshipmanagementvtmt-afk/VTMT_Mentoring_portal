@@ -7,7 +7,10 @@ const { Title, Text } = Typography;
 function MentorDashboard() {
   return (
     <div style={{ padding: '12px 0' }}>
-      <Title level={4} style={{ color: '#475569', marginBottom: 24, fontWeight: 500 }}>Dashboard Navigation Flow</Title>
+      <Title level={4} style={{ color: '#475569', marginBottom: 8, fontWeight: 500 }}>Vel Tech Faculty Workspace</Title>
+      <Text type="secondary" style={{ display: 'block', marginBottom: 24 }}>
+        Access mentoring workflows, student records, and attendance operations for Vel Tech Multi Tech.
+      </Text>
       
       <Row gutter={[24, 24]}>
         <Col xs={24} md={12} lg={6}>

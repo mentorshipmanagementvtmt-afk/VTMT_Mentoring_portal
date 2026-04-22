@@ -40,6 +40,8 @@ const interventionSchema = new Schema({
 
 }, { timestamps: true }); // Automatically adds 'createdAt' and 'updatedAt'
 
+interventionSchema.index({ studentId: 1, createdAt: -1 });
+
 // This creates the 'Intervention' model in our database
 const Intervention = mongoose.model('Intervention', interventionSchema);
 

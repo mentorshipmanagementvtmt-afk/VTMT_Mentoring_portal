@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import ProfileImageUpload from '../components/ProfileImageUpload';
 import api from '../api';
@@ -8,8 +8,22 @@ import { Button, Card, Col, Form, Input, Row, Select } from 'antd';
 export default function CreateHodPage() {
   const [saving, setSaving] = useState(false);
   const [profileImage, setProfileImage] = useState(null);
+  const [departments, setDepartments] = useState([]);
   const [form] = Form.useForm();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const loadDepartments = async () => {
+      try {
+        const { data } = await api.get('/departments');
+        setDepartments(data || []);
+      } catch (error) {
+        toast.error(error?.response?.data?.message || 'Failed to load departments.');
+      }
+    };
+
+    loadDepartments();
+  }, []);
 
   const onFinish = async values => {
     setSaving(true);
@@ -97,9 +111,9 @@ export default function CreateHodPage() {
                   <Form.Item label="Assigned Department" name="department" rules={[{ required: true, message: 'Required' }]}>
                     <Select
                       placeholder="Select department"
-                      options={['AI&DS', 'IT', 'CSE', 'MECH', 'CSBS', 'Cyber Security'].map(value => ({
-                        label: value,
-                        value
+                      options={departments.map((department) => ({
+                        label: department.department,
+                        value: department.department
                       }))}
                     />
                   </Form.Item>

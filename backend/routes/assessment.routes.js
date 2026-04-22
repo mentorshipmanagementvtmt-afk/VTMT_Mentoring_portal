@@ -44,34 +44,45 @@ router.get('/mentor/performance', protect, async (req, res) => {
   try {
     const mentorId = req.user._id
 
-    const mentees = await Student.find({ currentMentor: mentorId }).select('_id name registerNumber')
+    const mentees = await Student.find({ currentMentor: mentorId })
+      .select('_id name registerNumber')
+      .lean()
 
-    const performanceData = []
+    if (!mentees.length) {
+      return res.status(200).json([])
+    }
 
-    await Promise.all(
-      mentees.map(async mentee => {
-        const latestAssessment = await Assessment.findOne({ studentId: mentee._id }).sort({ updatedAt: -1 })
+    const latestAssessments = await Assessment.aggregate([
+      { $match: { studentId: { $in: mentees.map((mentee) => mentee._id) } } },
+      { $sort: { updatedAt: -1 } },
+      { $group: { _id: '$studentId', latestAssessment: { $first: '$$ROOT' } } }
+    ])
 
-        if (latestAssessment) {
-          const scores = calculateTotalScore(latestAssessment)
-          performanceData.push({
-            studentId: mentee._id,
-            name: mentee.name,
-            registerNumber: mentee.registerNumber,
-            totalScore: scores.totalScore,
-            academicYear: latestAssessment.academicYear
-          })
-        } else {
-          performanceData.push({
-            studentId: mentee._id,
-            name: mentee.name,
-            registerNumber: mentee.registerNumber,
-            totalScore: 0,
-            academicYear: 'N/A'
-          })
-        }
-      })
+    const latestByStudentId = new Map(
+      latestAssessments.map((entry) => [String(entry._id), entry.latestAssessment])
     )
+
+    const performanceData = mentees.map((mentee) => {
+      const latestAssessment = latestByStudentId.get(String(mentee._id))
+      if (!latestAssessment) {
+        return {
+          studentId: mentee._id,
+          name: mentee.name,
+          registerNumber: mentee.registerNumber,
+          totalScore: 0,
+          academicYear: 'N/A'
+        }
+      }
+
+      const scores = calculateTotalScore(latestAssessment)
+      return {
+        studentId: mentee._id,
+        name: mentee.name,
+        registerNumber: mentee.registerNumber,
+        totalScore: scores.totalScore,
+        academicYear: latestAssessment.academicYear
+      }
+    })
 
     performanceData.sort((a, b) => b.totalScore - a.totalScore)
 
@@ -105,7 +116,7 @@ router.get('/report/:studentId', protect, async (req, res) => {
       return res.status(403).json({ message: 'Unauthorized role.' })
     }
 
-    const assessments = await Assessment.find({ studentId: studentId })
+    const assessments = await Assessment.find({ studentId: studentId }).lean()
     if (assessments.length === 0) {
       return res.status(404).json({ message: 'No assessments found to generate a report.' })
     }
@@ -207,7 +218,7 @@ router.get('/:studentId', protect, async (req, res) => {
       return res.status(403).json({ message: 'Unauthorized role.' })
     }
 
-    const assessments = await Assessment.find({ studentId: studentId })
+    const assessments = await Assessment.find({ studentId: studentId }).lean()
 
     const assessmentsWithScores = assessments.map(doc => {
       const scores = calculateTotalScore(doc)
@@ -251,3 +262,4 @@ router.delete('/:assessmentId', protect, async (req, res) => {
 })
 
 module.exports = router
+

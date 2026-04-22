@@ -55,7 +55,8 @@ router.get('/:studentId', protect, async (req, res) => {
 
     const interventions = await Intervention.find({ studentId })
       .populate('mentorId', 'name')
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
 
     return res.status(200).json(interventions);
 

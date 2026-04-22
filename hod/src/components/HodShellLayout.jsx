@@ -41,17 +41,6 @@ function getSelectedKey(pathname) {
   return 'dashboard';
 }
 
-function getPageLabel(pathname) {
-  const selected = getSelectedKey(pathname);
-  if (selected === 'faculty') return 'Faculty Management';
-  if (selected === 'students') return 'Student Management';
-  if (selected === 'allocation') return 'Mentee Allocation';
-  if (selected === 'attendance') return 'Attendance Monitoring';
-  if (selected === 'performance') return 'Performance Reports';
-  if (selected === 'profile') return 'Profile Settings';
-  return 'Head Of Department Dashboard';
-}
-
 function HodShellChrome({ pathname, user, onLogout, onNavigate }) {
   const initials = (user?.name || 'HOD')
     .split(' ')
@@ -108,10 +97,12 @@ function HodShellChrome({ pathname, user, onLogout, onNavigate }) {
   return (
     <div className="admin-sidebar-inner">
       <div className="admin-brand">
-        <div className="admin-brand-mark">MP</div>
-        <div>
-          <div className="admin-brand-title">Mentorship Portal</div>
-          <div className="admin-brand-subtitle">HOD Workspace</div>
+        <div className="admin-brand-mark">
+          <img
+            src="/brand-favicon.webp"
+            alt="Vel Tech Multi Tech"
+            style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 999 }}
+          />
         </div>
       </div>
 
@@ -130,6 +121,14 @@ function HodShellChrome({ pathname, user, onLogout, onNavigate }) {
       />
 
       <div className="admin-sidebar-footer">
+        <a
+          href="https://trakshard.com"
+          target="_blank"
+          rel="noreferrer"
+          style={{ fontSize: 12, color: '#94a3b8', textDecoration: 'none', marginBottom: 10, display: 'inline-block' }}
+        >
+          Developed by Trakshard
+        </a>
         <Button type="text" icon={<LogoutOutlined />} className="admin-logout-button" onClick={onLogout}>
           Logout
         </Button>
@@ -185,15 +184,22 @@ export default function HodShellLayout() {
               className="admin-mobile-menu"
               onClick={() => setMobileOpen(true)}
             />
-            <div className="admin-topbar-title">{getPageLabel(location.pathname)}</div>
+            <Link to="/dashboard" className="admin-topbar-brand" aria-label="Vel Tech HOD dashboard">
+              <img src="/brand-navbar-wordmark.webp" alt="Vel Tech Multi Tech" className="admin-topbar-brand-wordmark" />
+            </Link>
+          </div>
+
+          <div className="admin-topbar-search-wrap">
+            <Input prefix={<SearchOutlined />} placeholder="Search students, faculty, or reports..." className="admin-search" />
           </div>
 
           <div className="admin-topbar-actions">
-            <Input prefix={<SearchOutlined />} placeholder="Search students, faculty, or reports..." className="admin-search" />
-            <Badge dot>
-              <Button type="text" shape="circle" icon={<BellOutlined />} className="admin-icon-button" />
-            </Badge>
-            <Button type="text" shape="circle" icon={<QuestionCircleOutlined />} className="admin-icon-button" />
+            <div className="admin-topbar-utility">
+              <Badge dot>
+                <Button type="text" shape="circle" icon={<BellOutlined />} className="admin-icon-button" />
+              </Badge>
+              <Button type="text" shape="circle" icon={<QuestionCircleOutlined />} className="admin-icon-button" />
+            </div>
             <div className="admin-topbar-user">
               <div className="admin-topbar-user-text">
                 <span className="admin-topbar-user-name">{user?.name || 'HOD'}</span>

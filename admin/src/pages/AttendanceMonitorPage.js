@@ -34,12 +34,9 @@ export default function AttendanceMonitorPage() {
   useEffect(() => {
     const fetchMonitoringData = async () => {
       try {
-        const [monitorResponse, lowAttendanceResponse] = await Promise.all([
-          api.get('/attendance/monitor'),
-          api.get('/attendance/low-attendance-students')
-        ]);
-        setData(monitorResponse.data || []);
-        setLowAttendanceStudents(lowAttendanceResponse.data || []);
+        const { data } = await api.get('/attendance/overview');
+        setData(data.monitor || []);
+        setLowAttendanceStudents(data.lowAttendanceStudents || []);
       } catch (err) {
         toast.error('Failed to load attendance monitoring data.');
       } finally {
@@ -93,7 +90,8 @@ export default function AttendanceMonitorPage() {
     return lowAttendanceStudents.filter(record =>
       record.studentName?.toLowerCase().includes(search) ||
       record.department?.toLowerCase().includes(search) ||
-      record.registerNumber?.toLowerCase().includes(search)
+      record.registerNumber?.toLowerCase().includes(search) ||
+      record.attendanceAction?.note?.toLowerCase().includes(search)
     );
   }, [lowAttendanceStudents, query]);
 
@@ -245,6 +243,21 @@ export default function AttendanceMonitorPage() {
       dataIndex: 'cumulativeAttendance',
       key: 'cumulativeAttendance',
       render: value => <Tag color="error">{value}%</Tag>
+    },
+    {
+      title: 'Mentor Action',
+      key: 'attendanceAction',
+      render: (_, record) =>
+        record.attendanceAction?.note ? (
+          <div style={{ maxWidth: 320 }}>
+            <div style={{ color: '#111c2d', fontWeight: 600 }}>{record.attendanceAction.note}</div>
+            <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>
+              {record.attendanceAction.updatedBy?.name || 'Mentor'}
+            </div>
+          </div>
+        ) : (
+          <Text type="secondary">No action recorded yet</Text>
+        )
     }
   ];
 

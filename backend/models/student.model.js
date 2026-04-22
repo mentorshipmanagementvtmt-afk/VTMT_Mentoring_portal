@@ -123,10 +123,31 @@ const studentSchema = new Schema(
     profileImage: {
       url: { type: String },
       publicId: { type: String }
+    },
+
+    attendanceAction: {
+      note: {
+        type: String,
+        trim: true,
+        default: ''
+      },
+      updatedAt: {
+        type: Date,
+        default: null
+      },
+      updatedBy: {
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+        default: null
+      }
     }
   },
   { timestamps: true }
 );
+
+// Read-heavy filters used by list and dashboard APIs
+studentSchema.index({ currentMentor: 1 });
+studentSchema.index({ department: 1, batch: 1, section: 1 });
 
 const Student = mongoose.model('Student', studentSchema);
 

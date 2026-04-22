@@ -10,23 +10,24 @@ const protect = async (req, res, next) => {
     token = req.headers.authorization.split(' ')[1];
   }
 
-  if (token) {
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-      // 3. Find the user from the token's ID and attach them to the request
-      // We do '-password' to make sure we don't attach the password
-      req.user = await User.findById(decoded.id).select('-password');
-
-      next();
-
-    } catch (error) {
-      res.status(401).json({ message: 'Not authorized, token failed' });
-    }
+  if (!token) {
+    return res.status(401).json({ message: 'Not authorized, no token' });
   }
 
-  if (!token) {
-    res.status(401).json({ message: 'Not authorized, no token' });
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    req.user = await User.findById(decoded.id)
+      .select('_id name email role department profileImage')
+      .lean();
+
+    if (!req.user) {
+      return res.status(401).json({ message: 'Not authorized, user not found' });
+    }
+
+    return next();
+  } catch (error) {
+    return res.status(401).json({ message: 'Not authorized, token failed' });
   }
 };
 

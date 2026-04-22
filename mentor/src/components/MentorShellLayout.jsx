@@ -26,15 +26,6 @@ function getSelectedKey(pathname) {
   return 'dashboard';
 }
 
-function getPageLabel(pathname) {
-  const selected = getSelectedKey(pathname);
-  if (selected === 'students') return 'Mentee Management';
-  if (selected === 'attendance') return 'Attendance Logging';
-  if (selected === 'performance') return 'Performance Reports';
-  if (selected === 'profile') return 'Profile Settings';
-  return 'Mentor Dashboard';
-}
-
 function MentorShellChrome({ pathname, user, onLogout, onNavigate }) {
   const initials = (user?.name || 'Mentor')
     .split(' ')
@@ -77,10 +68,12 @@ function MentorShellChrome({ pathname, user, onLogout, onNavigate }) {
   return (
     <div className="admin-sidebar-inner">
       <div className="admin-brand">
-        <div className="admin-brand-mark">MP</div>
-        <div>
-          <div className="admin-brand-title">Mentorship Portal</div>
-          <div className="admin-brand-subtitle">Mentor Workspace</div>
+        <div className="admin-brand-mark">
+          <img
+            src="/brand-favicon.webp"
+            alt="Vel Tech Multi Tech"
+            style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 999 }}
+          />
         </div>
       </div>
 
@@ -99,6 +92,14 @@ function MentorShellChrome({ pathname, user, onLogout, onNavigate }) {
       />
 
       <div className="admin-sidebar-footer">
+        <a
+          href="https://trakshard.com"
+          target="_blank"
+          rel="noreferrer"
+          style={{ fontSize: 12, color: '#94a3b8', textDecoration: 'none', marginBottom: 10, display: 'inline-block' }}
+        >
+          Developed by Trakshard
+        </a>
         <Button type="text" icon={<LogoutOutlined />} className="admin-logout-button" onClick={onLogout}>
           Logout
         </Button>
@@ -154,15 +155,22 @@ export default function MentorShellLayout() {
               className="admin-mobile-menu"
               onClick={() => setMobileOpen(true)}
             />
-            <div className="admin-topbar-title">{getPageLabel(location.pathname)}</div>
+            <Link to="/dashboard" className="admin-topbar-brand" aria-label="Vel Tech Faculty dashboard">
+              <img src="/brand-navbar-wordmark.webp" alt="Vel Tech Multi Tech" className="admin-topbar-brand-wordmark" />
+            </Link>
+          </div>
+
+          <div className="admin-topbar-search-wrap">
+            <Input prefix={<SearchOutlined />} placeholder="Search mentees, attendance, or reports..." className="admin-search" />
           </div>
 
           <div className="admin-topbar-actions">
-            <Input prefix={<SearchOutlined />} placeholder="Search mentees, attendance, or reports..." className="admin-search" />
-            <Badge dot>
-              <Button type="text" shape="circle" icon={<BellOutlined />} className="admin-icon-button" />
-            </Badge>
-            <Button type="text" shape="circle" icon={<QuestionCircleOutlined />} className="admin-icon-button" />
+            <div className="admin-topbar-utility">
+              <Badge dot>
+                <Button type="text" shape="circle" icon={<BellOutlined />} className="admin-icon-button" />
+              </Badge>
+              <Button type="text" shape="circle" icon={<QuestionCircleOutlined />} className="admin-icon-button" />
+            </div>
             <div className="admin-topbar-user">
               <div className="admin-topbar-user-text">
                 <span className="admin-topbar-user-name">{user?.name || 'Mentor'}</span>

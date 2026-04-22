@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import { Button, Card, Col, Form, Input, Row, Select } from 'antd';
@@ -6,15 +6,27 @@ import { useAuth } from '../context/AuthContext';
 import ProfileImageUpload from '../components/ProfileImageUpload';
 import api from '../api';
 
-const DEPARTMENTS = ['AI&DS', 'IT', 'CSE', 'MECH', 'CSBS', 'Cyber Security'];
-
 function CreateMentorPage() {
   const { user } = useAuth();
   const isAdmin = user?.role === 'admin';
   const [saving, setSaving] = useState(false);
   const [profileImage, setProfileImage] = useState(null);
+  const [departments, setDepartments] = useState([]);
   const [form] = Form.useForm();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const loadDepartments = async () => {
+      try {
+        const { data } = await api.get('/departments');
+        setDepartments(data || []);
+      } catch (error) {
+        toast.error(error?.response?.data?.message || 'Failed to load departments.');
+      }
+    };
+
+    loadDepartments();
+  }, []);
 
   const onFinish = async (values) => {
     setSaving(true);
@@ -103,7 +115,10 @@ function CreateMentorPage() {
                     <Form.Item label="Department" name="department" rules={[{ required: true, message: 'Required' }]}>
                       <Select
                         placeholder="Select Department"
-                        options={DEPARTMENTS.map((department) => ({ label: department, value: department }))}
+                        options={departments.map((department) => ({
+                          label: department.department,
+                          value: department.department
+                        }))}
                       />
                     </Form.Item>
                   </Col>

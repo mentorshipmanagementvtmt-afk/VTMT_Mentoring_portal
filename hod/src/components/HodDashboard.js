@@ -81,9 +81,9 @@ function HodDashboard() {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', marginBottom: 20 }}>
         <div>
-          <Title level={4} style={{ marginBottom: 4, color: '#0f172a' }}>HOD Dashboard</Title>
+          <Title level={4} style={{ marginBottom: 4, color: '#0f172a' }}>Vel Tech Department Dashboard</Title>
           <Text type="secondary" style={{ display: 'block' }}>
-            Department Analytics: {user.department}
+            Department analytics for {user.department}, Vel Tech Multi Tech.
           </Text>
         </div>
       </div>

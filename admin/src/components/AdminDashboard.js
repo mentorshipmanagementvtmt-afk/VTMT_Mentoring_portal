@@ -40,24 +40,10 @@ export default function AdminDashboard() {
     const fetchDashboardData = async () => {
       setLoading(true);
       try {
-        const [analyticsRes, attendanceRes, hodsRes, mentorsRes, studentsRes] = await Promise.all([
-          api.get('/analytics/departments'),
-          api.get('/attendance/monitor'),
-          api.get('/users/hods'),
-          api.get('/users/mentors'),
-          api.get('/students')
-        ]);
-
-        const attendanceData = attendanceRes.data || [];
-        const flagged = attendanceData.filter(item => item.isFlagged);
-
-        setAnalytics(analyticsRes.data || []);
-        setAlerts(flagged);
-        setStats({
-          hods: (hodsRes.data || []).length,
-          mentors: (mentorsRes.data || []).length,
-          students: (studentsRes.data || []).length
-        });
+        const { data } = await api.get('/analytics/dashboard-summary');
+        setAnalytics(data.departmentScores || []);
+        setAlerts(data.alerts || []);
+        setStats(data.stats || { hods: 0, mentors: 0, students: 0 });
       } catch (err) {
         toast.error('Failed to load dashboard analytics.');
       } finally {
@@ -108,7 +94,7 @@ export default function AdminDashboard() {
 
   const quickActions = [
     { label: 'Manage HODs', to: '/hods' },
-    { label: 'Manage Faculty', to: '/departments' },
+    { label: 'Manage Courses', to: '/departments' },
     { label: 'Manage Students', to: '/students' },
     { label: 'Attendance Review', to: '/attendance/monitor' }
   ];
@@ -117,10 +103,10 @@ export default function AdminDashboard() {
     <div className="fade-in-up">
       <div className="admin-page-header">
         <div>
-          <div className="admin-page-eyebrow">System Overview</div>
-          <h1 className="admin-page-title">System Admin Dashboard</h1>
+          <div className="admin-page-eyebrow">Vel Tech Administration</div>
+          <h1 className="admin-page-title">Vel Tech Admin Dashboard</h1>
           <p className="admin-page-description">
-            Overview of mentorship operations, faculty compliance, and department activity across the institution.
+            Central oversight for Vel Tech Multi Tech mentorship operations, faculty compliance, and department performance.
           </p>
         </div>
 
@@ -179,7 +165,7 @@ export default function AdminDashboard() {
           title={<span style={{ fontFamily: 'Manrope, sans-serif', fontWeight: 800 }}>Department Contribution</span>}
           extra={<Text type="secondary">Activity points based on mentor and student logging</Text>}
         >
-          {loading && analytics.length > 0 ? (
+          {loading ? (
             <div style={{ display: 'grid', placeItems: 'center', minHeight: 300 }}>
               <Text type="secondary">Loading records...</Text>
             </div>

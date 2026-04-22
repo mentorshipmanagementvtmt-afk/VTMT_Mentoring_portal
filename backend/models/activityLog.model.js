@@ -83,6 +83,9 @@ const activityLogSchema = new Schema(
   { timestamps: true }
 );
 
+activityLogSchema.index({ studentId: 1, semester: 1, slNo: 1, date: 1, createdAt: 1 });
+activityLogSchema.index({ categoryGroup: 1 });
+
 // Pre-save hook for auto-filling fields
 activityLogSchema.pre('save', async function (next) {
   try {
