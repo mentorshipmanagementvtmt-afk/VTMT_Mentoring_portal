@@ -24,7 +24,9 @@ export default function ManageStudentsPage() {
       if (sectionFilter) params.append('section', sectionFilter);
 
       const response = await api.get(`/students?${params.toString()}`);
-      setStudents(response.data || []);
+      // Backend returns { students: [...], total, page, pages }
+      const data = response.data;
+      setStudents(Array.isArray(data) ? data : (data.students || []));
     } catch (err) {
       toast.error('Failed to fetch students data.');
     } finally {
