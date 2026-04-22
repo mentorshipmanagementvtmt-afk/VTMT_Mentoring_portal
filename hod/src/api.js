@@ -1,10 +1,9 @@
 import axios from "axios";
 
-// This part is the same as yours
 const BASE = (process.env.REACT_APP_API_URL || "http://localhost:5000").replace(/\/+$/, "");
 
 const api = axios.create({
-  baseURL: `${BASE}/api`, // add /api exactly once
+  baseURL: `${BASE}/api`,
   withCredentials: true
 });
 
@@ -19,9 +18,31 @@ export const fetchCsrfToken = async () => {
   }
 };
 
+// Store JWT token for Authorization header fallback (needed for mobile browsers
+// that block cross-origin cookies)
+export const setAuthToken = (token) => {
+  if (token) {
+    localStorage.setItem('authToken', token);
+  } else {
+    localStorage.removeItem('authToken');
+  }
+};
+
+export const getAuthToken = () => {
+  return localStorage.getItem('authToken');
+};
+
 api.interceptors.request.use(
   async (config) => {
     const method = (config.method || 'get').toLowerCase();
+
+    // Always attach Authorization header if we have a stored token
+    // This is the fallback for when cookies are blocked (mobile browsers)
+    const authToken = getAuthToken();
+    if (authToken) {
+      config.headers = config.headers || {};
+      config.headers['Authorization'] = `Bearer ${authToken}`;
+    }
 
     // Attach CSRF token on modifying requests
     if (['post', 'put', 'delete', 'patch'].includes(method)) {
@@ -38,10 +59,8 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
-    // Handle request errors
     return Promise.reject(error);
   }
 );
-// ----------------------------------------
 
 export default api;

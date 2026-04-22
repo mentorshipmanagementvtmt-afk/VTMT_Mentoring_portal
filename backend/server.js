@@ -2,7 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
-const csrf = require('csurf');
+const crypto = require('crypto');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
@@ -12,6 +12,9 @@ dotenv.config();
 const app = express();
 app.set('trust proxy', 1);
 const PORT = process.env.PORT || 5000;
+
+// Secret used to sign CSRF tokens (falls back to JWT_SECRET)
+const CSRF_SECRET = process.env.CSRF_SECRET || process.env.JWT_SECRET || 'csrf-fallback-secret';
 
 const allowedOrigins = [
   'https://veltech-mentoring-portal.vercel.app',
@@ -113,18 +116,58 @@ app.get('/', (req, res) => {
   res.send('Mentoring Portal API is running!');
 });
 
-const csrfProtection = csrf({
-  cookie: {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
-  }
-});
-app.use(csrfProtection);
+// -------------------------------------------------------
+// Stateless CSRF protection (no cookies needed)
+// -------------------------------------------------------
+function generateCsrfToken() {
+  const payload = crypto.randomBytes(32).toString('hex');
+  const timestamp = Date.now().toString();
+  const data = `${payload}.${timestamp}`;
+  const signature = crypto.createHmac('sha256', CSRF_SECRET).update(data).digest('hex');
+  return `${data}.${signature}`;
+}
 
+function verifyCsrfToken(token) {
+  if (!token || typeof token !== 'string') return false;
+  const parts = token.split('.');
+  if (parts.length !== 3) return false;
+
+  const [payload, timestamp, signature] = parts;
+  const data = `${payload}.${timestamp}`;
+  const expected = crypto.createHmac('sha256', CSRF_SECRET).update(data).digest('hex');
+
+  // Timing-safe comparison
+  if (signature.length !== expected.length) return false;
+  try {
+    return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
+  } catch {
+    return false;
+  }
+}
+
+// CSRF token endpoint — returns a signed token (no cookie required)
 app.get('/api/csrf-token', (req, res) => {
-  res.json({ csrfToken: req.csrfToken() });
+  const csrfToken = generateCsrfToken();
+  res.json({ csrfToken });
 });
+
+// CSRF validation middleware for mutating requests
+const csrfProtection = (req, res, next) => {
+  const method = req.method.toUpperCase();
+  // Skip CSRF check for safe/read-only methods
+  if (['GET', 'HEAD', 'OPTIONS'].includes(method)) {
+    return next();
+  }
+
+  const token = req.headers['csrf-token'] || req.headers['x-csrf-token'];
+  if (!verifyCsrfToken(token)) {
+    return res.status(403).json({ message: 'Invalid or missing CSRF token. Please refresh and try again.' });
+  }
+  next();
+};
+
+// Apply CSRF protection to all /api routes
+app.use('/api', csrfProtection);
 
 const userRoutes = require('./routes/user.routes.js');
 const studentRoutes = require('./routes/student.routes.js');
@@ -150,9 +193,6 @@ app.use('/api/departments', departmentRoutes);
 
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err.message);
-  if (err.code === 'EBADCSRFTOKEN') {
-    return res.status(403).json({ message: 'Invalid or missing CSRF token. Please refresh and try again.' });
-  }
   return res.status(err.status || 500).json({ message: err.message || 'Internal Server Error' });
 });
 
