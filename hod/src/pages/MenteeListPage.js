@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-toastify';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link , useNavigate } from 'react-router-dom';
 import api from 'api';
 import { Card, Row, Col, Typography, Button, Spin, Empty,  Popconfirm } from 'antd';
 import { ArrowLeftOutlined, DeleteOutlined } from '@ant-design/icons';
@@ -8,6 +8,7 @@ import { ArrowLeftOutlined, DeleteOutlined } from '@ant-design/icons';
 const { Title, Text } = Typography;
 
 function MenteeListPage() {
+  const navigate = useNavigate();
   const [mentees, setMentees] = useState([]);
   const [loading, setLoading] = useState(true);
   const { mentorId } = useParams();
@@ -49,9 +50,9 @@ function MenteeListPage() {
   return (
     <div style={{ minHeight: '100vh', background: '#f8fafc', padding: '32px 16px' }}>
       <div style={{ maxWidth: 1000, margin: '0 auto' }}>
-        <Link to="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24, fontSize: 16, color: '#0ea5e9', textDecoration: 'none', fontWeight: 500 }}>
-          <ArrowLeftOutlined /> Back to Dashboard
-        </Link>
+        <Button type="link" onClick={() => navigate(-1)} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24, fontSize: 16, color: '#0ea5e9', fontWeight: 500, padding: 0 }}>
+          <ArrowLeftOutlined /> Back
+        </Button>
         
         <Card variant="borderless" style={{ borderRadius: 16, boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
           <div style={{ borderBottom: '1px solid #e2e8f0', paddingBottom: 16, marginBottom: 24 }}>

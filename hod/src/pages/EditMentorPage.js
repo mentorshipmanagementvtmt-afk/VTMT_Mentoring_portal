@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import ProfileImageUpload from '../components/ProfileImageUpload';
 import api from 'api';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Card, Form, Input, Button, Row, Col, Typography, Spin, Avatar } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';
 import { useAuth } from '../context/AuthContext';
@@ -77,9 +77,9 @@ function EditMentorPage() {
   return (
     <div style={{ minHeight: '100vh', background: '#f8fafc', padding: '32px 16px' }}>
       <div style={{ maxWidth: 800, margin: '0 auto' }}>
-        <Link to={`/departments/${user.department}`} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24, fontSize: 16, color: '#0ea5e9', textDecoration: 'none', fontWeight: 500 }}>
-          <ArrowLeftOutlined /> Back to Department
-        </Link>
+        <Button type="link" onClick={() => navigate(-1)} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24, fontSize: 16, color: '#0ea5e9', fontWeight: 500, padding: 0 }}>
+          <ArrowLeftOutlined /> Back
+        </Button>
 
         <Card
           title={<span style={{ fontWeight: 700, fontSize: 20 }}>Edit Faculty Profile</span>}

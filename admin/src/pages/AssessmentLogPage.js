@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { Typography, Spin, Empty } from 'antd';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Typography, Spin, Empty, Button } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';
 import AssessmentForm from '../components/AssessmentForm';
 import api from '../api';
 
 function AssessmentLogPage() {
+  const navigate = useNavigate();
   const { studentId } = useParams();
   const [assessments, setAssessments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -29,7 +30,9 @@ function AssessmentLogPage() {
   return (
     <div style={{ minHeight: '100vh', background: '#f8fafc', padding: '32px 16px' }}>
       <div style={{ maxWidth: 1000, margin: '0 auto' }}>
-        <Link to={`/mentee/${studentId}`} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24, fontSize: 16, color: '#0ea5e9', textDecoration: 'none', fontWeight: 500 }}><ArrowLeftOutlined /> Back to Profile</Link>
+        <Button type="link" onClick={() => navigate(-1)} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24, fontSize: 16, color: '#0ea5e9', fontWeight: 500, padding: 0 }}>
+          <ArrowLeftOutlined /> Back
+        </Button>
         <Typography.Title level={2}>Assessment Data</Typography.Title>
         {assessments.length === 0 ? (
            <Empty description="No assessments recorded yet." />

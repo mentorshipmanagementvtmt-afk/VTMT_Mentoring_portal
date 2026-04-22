@@ -8,14 +8,39 @@ const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(null);
   const [user, setUser] = useState(null);
+  const [isAuthReady, setIsAuthReady] = useState(false);
 
-  // 3. Check if user is already logged in (from localStorage)
+  // 3. Restore the current session from the backend cookie
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setToken('cookie'); // Indicate we rely on HttpOnly cookie
-      setUser(JSON.parse(storedUser));
-    }
+    let isMounted = true;
+
+    const restoreSession = async () => {
+      try {
+        const { data } = await api.get('/users/profile');
+        if (!isMounted) return;
+
+        localStorage.setItem('user', JSON.stringify(data));
+        setToken('cookie');
+        setUser(data);
+      } catch (error) {
+        if (!isMounted) return;
+
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+        setToken(null);
+        setUser(null);
+      } finally {
+        if (isMounted) {
+          setIsAuthReady(true);
+        }
+      }
+    };
+
+    restoreSession();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // 4. Login function
@@ -39,7 +64,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ token, user, login, logout }}>
+    <AuthContext.Provider value={{ token, user, login, logout, isAuthReady }}>
       {children}
     </AuthContext.Provider>
   );

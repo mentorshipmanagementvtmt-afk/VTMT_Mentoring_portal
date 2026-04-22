@@ -68,7 +68,7 @@ router.post('/login', async (req, res) => {
     res.cookie('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax', // Must be lax or none for cross-port requests locally
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // Must be none for Vercel cross-site
       maxAge: 24 * 60 * 60 * 1000 // 1 day
     });
 
@@ -91,7 +91,7 @@ router.post('/logout', (req, res) => {
   res.clearCookie('token', {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax'
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
   });
   res.status(200).json({ message: 'Logged out successfully' });
 });

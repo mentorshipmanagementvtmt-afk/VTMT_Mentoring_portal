@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import api from 'api';
 import { Card, Typography, Table, Select, Button, Row, Col, Tag, Space, Spin, Avatar } from 'antd';
 import { ArrowLeftOutlined, TeamOutlined, UserOutlined, CheckCircleOutlined } from '@ant-design/icons';
@@ -10,6 +10,7 @@ const { Title, Text } = Typography;
 const { Option } = Select;
 
 function MenteeAllocationPage() {
+  const navigate = useNavigate();
   const { user } = useAuth(); // eslint-disable-line no-unused-vars
   const [students, setStudents] = useState([]);
   const [mentors, setMentors] = useState([]);
@@ -154,9 +155,9 @@ function MenteeAllocationPage() {
     <div style={{ minHeight: '100vh', background: '#f8fafc', padding: '32px 16px' }}>
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
 
-        <Link to="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24, fontSize: 16, color: '#0ea5e9', textDecoration: 'none', fontWeight: 500 }}>
-          <ArrowLeftOutlined /> Back to Dashboard
-        </Link>
+        <Button type="link" onClick={() => navigate(-1)} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24, fontSize: 16, color: '#0ea5e9', fontWeight: 500, padding: 0 }}>
+          <ArrowLeftOutlined /> Back
+        </Button>
 
         <div style={{ marginBottom: 32 }}>
           <Title level={2} style={{ margin: '0 0 4px 0', color: '#0f172a' }}>

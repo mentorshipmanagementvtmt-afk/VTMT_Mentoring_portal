@@ -21,22 +21,20 @@ export const fetchCsrfToken = async () => {
 
 api.interceptors.request.use(
   async (config) => {
-    
+    const method = (config.method || 'get').toLowerCase();
+
     // Attach CSRF token on modifying requests
-    if (['post', 'put', 'delete', 'patch'].includes(config.method.toLowerCase())) {
+    if (['post', 'put', 'delete', 'patch'].includes(method)) {
       if (!csrfToken) {
         await fetchCsrfToken();
       }
+      if (!csrfToken) {
+        return Promise.reject(new Error('Unable to fetch CSRF token.'));
+      }
+      config.headers = config.headers || {};
       config.headers['CSRF-Token'] = csrfToken;
     }
 
-    // Get the token from localStorage
-    const token = localStorage.getItem('token');
-    
-    // If the token exists, add it to the Authorization header
-    if (token) {
-      config.headers['Authorization'] = `Bearer ${token}`;
-    }
     return config;
   },
   (error) => {

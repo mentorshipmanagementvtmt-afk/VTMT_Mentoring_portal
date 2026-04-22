@@ -5,26 +5,121 @@ const cookieParser = require('cookie-parser');
 const csrf = require('csurf');
 const dotenv = require('dotenv');
 const cors = require('cors');
+const rateLimit = require('express-rate-limit');
 
 dotenv.config();
 
 const app = express();
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 5000;
 
-const corsOptions = {
-  origin: ['https://veltech-mentoring-portal.vercel.app', 'http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002', 'http://localhost:3003'],
-  credentials: true
+const allowedOrigins = [
+  'https://veltech-mentoring-portal.vercel.app',
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'http://localhost:3002',
+  'http://localhost:3003',
+  process.env.FRONTEND_URL,
+  process.env.ADMIN_URL,
+  process.env.HOD_URL,
+  process.env.MENTOR_URL
+].filter(Boolean);
+
+const allowedOriginSet = new Set(allowedOrigins);
+const isAllowedOrigin = (origin) => {
+  if (!origin) return true;
+
+  try {
+    const { protocol, hostname } = new URL(origin);
+    if (protocol !== 'https:' && protocol !== 'http:') {
+      return false;
+    }
+
+    if (allowedOriginSet.has(origin)) {
+      return true;
+    }
+
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return true;
+    }
+
+    return hostname.endsWith('.vercel.app');
+  } catch (error) {
+    return false;
+  }
 };
 
-app.use(cors(corsOptions));
-app.use(express.json());
+app.use(cors({
+  origin(origin, callback) {
+    if (isAllowedOrigin(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true
+}));
 
-// Security Middlewares
-app.use(helmet()); 
+app.use(express.json());
 app.use(cookieParser());
 
-// CSRF Protection
-const csrfProtection = csrf({ cookie: true });
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+      fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
+      imgSrc: ["'self'", 'data:', 'https://res.cloudinary.com', 'blob:'],
+      connectSrc: ["'self'", ...allowedOrigins, 'https://*.vercel.app']
+    }
+  },
+  crossOriginResourcePolicy: { policy: 'cross-origin' }
+}));
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 300,
+  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false
+});
+app.use('/api', limiter);
+
+const connectDB = async () => {
+  if (mongoose.connection.readyState >= 1) return;
+
+  const dbUrl = process.env.DATABASE_URL;
+  await mongoose.connect(dbUrl, {
+    family: 4,
+    maxPoolSize: 20,
+    minPoolSize: 5,
+    serverSelectionTimeoutMS: 5000,
+    socketTimeoutMS: 45000
+  });
+  console.log('MongoDB connected successfully.');
+};
+
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    console.error('DB connection error:', error.message);
+    return res.status(500).json({ message: 'Database connection failed.', error: error.message });
+  }
+});
+
+app.get('/', (req, res) => {
+  res.send('Mentoring Portal API is running!');
+});
+
+const csrfProtection = csrf({
+  cookie: {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+  }
+});
 app.use(csrfProtection);
 
 app.get('/api/csrf-token', (req, res) => {
@@ -53,33 +148,18 @@ app.use('/api/attendance', attendanceRoutes);
 app.use('/api/exam-records', examRecordRoutes);
 app.use('/api/departments', departmentRoutes);
 
-const connectDB = async () => {
-  try {
-    const dbUrl = process.env.DATABASE_URL;
-    // family: 4 forces IPv4, bypassing the known Render/Node issue with DNS SRV lookups (ENOTFOUND)
-    await mongoose.connect(dbUrl, {
-      family: 4,
-      maxPoolSize: 20,
-      minPoolSize: 5,
-      serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 45000
-    });
-    console.log('✅ MongoDB connected successfully!');
-  } catch (error) {
-    console.error('❌ Error connecting to MongoDB:', error.message);
-    process.exit(1);
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err.message);
+  if (err.code === 'EBADCSRFTOKEN') {
+    return res.status(403).json({ message: 'Invalid or missing CSRF token. Please refresh and try again.' });
   }
-};
-
-app.get('/', (req, res) => {
-  res.send('Mentoring Portal API is running!');
+  return res.status(err.status || 500).json({ message: err.message || 'Internal Server Error' });
 });
 
-const startServer = async () => {
-  await connectDB();
+if (process.env.NODE_ENV !== 'production') {
   app.listen(PORT, () => {
-    console.log(`🚀 Server is running on http://localhost:${PORT}`);
+    console.log(`Server is running on http://localhost:${PORT}`);
   });
-};
+}
 
-startServer();
+module.exports = app;
