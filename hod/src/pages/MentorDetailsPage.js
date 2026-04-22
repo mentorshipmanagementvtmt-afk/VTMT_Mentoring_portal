@@ -3,7 +3,7 @@ import { toast } from 'react-toastify';
 import { useParams, Link } from 'react-router-dom';
 import api from 'api';
 import { Card, Typography, Spin, Button,  Tag } from 'antd';
-import { ArrowLeftOutlined, EditOutlined, TeamOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, TeamOutlined } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
 

@@ -4,10 +4,8 @@ import ProfileImageUpload from '../components/ProfileImageUpload';
 import { useAuth } from '../context/AuthContext';
 import api from 'api';
 import { Link, useNavigate } from 'react-router-dom';
-import { Card, Form, Input, Button, Row, Col, Typography,  Divider, Select } from 'antd';
+import { Card, Form, Input, Button, Row, Col, Select } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';
-
-const { Title } = Typography;
 
 function CreateStudentPage() {
   const { user } = useAuth();
@@ -135,12 +133,6 @@ function CreateStudentPage() {
       setSaving(false);
     }
   };
-
-  const renderSectionTitle = (title) => (
-    <Divider orientation="left" style={{ borderColor: '#cbd5e1', color: '#0f172a', fontWeight: 700, marginTop: 32, marginBottom: 24 }}>
-      {title}
-    </Divider>
-  );
 
   return (
     <div style={{ minHeight: '100vh', background: '#f8fafc', padding: '32px 16px' }}>

@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
-import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import { Card, Form, Input, Button, Upload, Typography, Spin, Avatar, Divider, Space } from 'antd';
-import { UserOutlined, UploadOutlined, CloudUploadOutlined, LockOutlined, MailOutlined, IdcardOutlined, BankOutlined, LoadingOutlined } from '@ant-design/icons';
+import { UserOutlined, CloudUploadOutlined, LockOutlined, MailOutlined, IdcardOutlined, BankOutlined, LoadingOutlined } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
 
@@ -16,31 +15,29 @@ function ProfilePage() {
   const [removeImage, setRemoveImage] = useState(false);
   const [previewImage, setPreviewImage] = useState('');
   
-  const navigate = useNavigate();
-
   useEffect(() => {
-    fetchProfile();
-  }, []);
-
-  const fetchProfile = async () => {
-    try {
-      const res = await api.get('/users/profile');
-      setUser(res.data);
-      form.setFieldsValue({
-        name: res.data.name,
-        email: res.data.email,
-        mtsNumber: res.data.mtsNumber,
-        designation: res.data.designation,
-      });
-      if (res.data.profileImage?.url) {
-        setPreviewImage(res.data.profileImage.url);
+    const fetchProfile = async () => {
+      try {
+        const res = await api.get('/users/profile');
+        setUser(res.data);
+        form.setFieldsValue({
+          name: res.data.name,
+          email: res.data.email,
+          mtsNumber: res.data.mtsNumber,
+          designation: res.data.designation,
+        });
+        if (res.data.profileImage?.url) {
+          setPreviewImage(res.data.profileImage.url);
+        }
+      } catch (error) {
+        toast.error('Failed to load profile details');
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      toast.error('Failed to load profile details');
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
+    fetchProfile();
+  }, [form]);
 
   const handleFileChange = ({ fileList: newFileList }) => {
     setFileList(newFileList);

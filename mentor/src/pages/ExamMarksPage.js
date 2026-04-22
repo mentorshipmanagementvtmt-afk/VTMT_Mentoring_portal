@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeftOutlined, DeleteOutlined, SaveOutlined } from '@ant-design/icons';
 import { Button, Card, Input, InputNumber, Space, Table, Tag, Typography } from 'antd';
@@ -17,7 +17,7 @@ function ExamMarksPage() {
   const [deletingMap, setDeletingMap] = useState({});
   const [loading, setLoading] = useState(true);
 
-  const hydrate = async () => {
+  const hydrate = useCallback(async () => {
     try {
       setLoading(true);
       const [typesRes, detailsRes] = await Promise.all([
@@ -52,11 +52,11 @@ function ExamMarksPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [studentId]);
 
   useEffect(() => {
     hydrate();
-  }, [studentId]);
+  }, [hydrate]);
 
   const updateRow = (examType, patch) => {
     setRows((prev) => prev.map((row) => (row.examType === examType ? { ...row, ...patch } : row)));
@@ -96,89 +96,86 @@ function ExamMarksPage() {
     }
   };
 
-  const columns = useMemo(
-    () => [
-      {
-        title: 'Exam Type',
-        dataIndex: 'examType',
-        key: 'examType',
-        render: (value) => <Text strong>{value}</Text>
-      },
-      {
-        title: 'Marks',
-        key: 'marks',
-        render: (_, row) => (
-          <InputNumber
-            min={0}
-            max={row.maxMarks || 100}
-            value={row.marksObtained}
-            onChange={(value) => updateRow(row.examType, { marksObtained: value ?? 0 })}
-          />
-        )
-      },
-      {
-        title: 'Max Marks',
-        key: 'maxMarks',
-        render: (_, row) => (
-          <InputNumber
-            min={1}
-            value={row.maxMarks}
-            onChange={(value) => updateRow(row.examType, { maxMarks: value ?? 100 })}
-          />
-        )
-      },
-      {
-        title: 'Attendance %',
-        key: 'attendancePercent',
-        render: (_, row) => (
-          <InputNumber
-            min={0}
-            max={100}
-            value={row.attendancePercent}
-            onChange={(value) => updateRow(row.examType, { attendancePercent: value ?? 0 })}
-          />
-        )
-      },
-      {
-        title: 'Remarks',
-        key: 'remarks',
-        render: (_, row) => (
-          <Input
-            value={row.remarks}
-            onChange={(event) => updateRow(row.examType, { remarks: event.target.value })}
-            placeholder="Optional notes"
-          />
-        )
-      },
-      {
-        title: 'Actions',
-        key: 'actions',
-        render: (_, row) => (
-          <Space>
+  const columns = [
+    {
+      title: 'Exam Type',
+      dataIndex: 'examType',
+      key: 'examType',
+      render: (value) => <Text strong>{value}</Text>
+    },
+    {
+      title: 'Marks',
+      key: 'marks',
+      render: (_, row) => (
+        <InputNumber
+          min={0}
+          max={row.maxMarks || 100}
+          value={row.marksObtained}
+          onChange={(value) => updateRow(row.examType, { marksObtained: value ?? 0 })}
+        />
+      )
+    },
+    {
+      title: 'Max Marks',
+      key: 'maxMarks',
+      render: (_, row) => (
+        <InputNumber
+          min={1}
+          value={row.maxMarks}
+          onChange={(value) => updateRow(row.examType, { maxMarks: value ?? 100 })}
+        />
+      )
+    },
+    {
+      title: 'Attendance %',
+      key: 'attendancePercent',
+      render: (_, row) => (
+        <InputNumber
+          min={0}
+          max={100}
+          value={row.attendancePercent}
+          onChange={(value) => updateRow(row.examType, { attendancePercent: value ?? 0 })}
+        />
+      )
+    },
+    {
+      title: 'Remarks',
+      key: 'remarks',
+      render: (_, row) => (
+        <Input
+          value={row.remarks}
+          onChange={(event) => updateRow(row.examType, { remarks: event.target.value })}
+          placeholder="Optional notes"
+        />
+      )
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
+      render: (_, row) => (
+        <Space>
+          <Button
+            type="primary"
+            icon={<SaveOutlined />}
+            onClick={() => saveRow(row)}
+            loading={!!savingMap[row.examType]}
+          >
+            Save
+          </Button>
+          {row._id && (
             <Button
-              type="primary"
-              icon={<SaveOutlined />}
-              onClick={() => saveRow(row)}
-              loading={!!savingMap[row.examType]}
+              danger
+              icon={<DeleteOutlined />}
+              onClick={() => deleteRow(row)}
+              loading={!!deletingMap[row.examType]}
             >
-              Save
+              Delete
             </Button>
-            {row._id && (
-              <Button
-                danger
-                icon={<DeleteOutlined />}
-                onClick={() => deleteRow(row)}
-                loading={!!deletingMap[row.examType]}
-              >
-                Delete
-              </Button>
-            )}
-          </Space>
-        )
-      }
-    ],
-    [deletingMap, savingMap, rows]
-  );
+          )}
+        </Space>
+      )
+    }
+  ];
 
   return (
     <div style={{ minHeight: '100vh', background: '#f8fafc', padding: '32px 16px' }}>

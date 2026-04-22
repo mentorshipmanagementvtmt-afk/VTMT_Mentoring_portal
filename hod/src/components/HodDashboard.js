@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
-import { Row, Col, Button, Typography, Table, Card, Spin, Avatar, Alert } from 'antd';
+import { Button, Typography, Table, Card, Spin, Avatar, Alert } from 'antd';
 import { UserOutlined, WarningOutlined } from '@ant-design/icons';
 import api from '../api';
 import { toast } from 'react-toastify';

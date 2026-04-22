@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { useParams, Link } from 'react-router-dom';
 import api from '../api';
-import { Card, Row, Col, Typography, Button, Spin, Avatar, Space, Tag, Descriptions, Divider } from 'antd';
+import { Card, Row, Col, Typography, Button, Spin, Avatar, Tag, Descriptions } from 'antd';
 import { ArrowLeftOutlined, EditOutlined, ReadOutlined, WarningOutlined, CommentOutlined, FlagOutlined, DownloadOutlined } from '@ant-design/icons';
 import { useAuth } from '../context/AuthContext';
 import { downloadStudentReport } from '../utils/reportGenerator';
@@ -16,23 +16,25 @@ function MenteeDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
 
-  const fetchStudent = async () => {
-    try {
-      const response = await api.get(`/students/${studentId}/details`);
-      setStudent(response.data.profile);
-      
-      const attendanceResponse = await api.get(`/attendance/student/${studentId}`);
-      if (attendanceResponse.data?.cumulativePercentage !== undefined) {
-        setStudent(prev => ({ ...prev, cumulativeAttendance: attendanceResponse.data.cumulativePercentage }));
-      }
-    } catch (err) {
-      toast.error('Failed to fetch student details');
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    const fetchStudent = async () => {
+      try {
+        const response = await api.get(`/students/${studentId}/details`);
+        setStudent(response.data.profile);
 
-  useEffect(() => { fetchStudent(); }, [studentId]);
+        const attendanceResponse = await api.get(`/attendance/student/${studentId}`);
+        if (attendanceResponse.data?.cumulativePercentage !== undefined) {
+          setStudent((prev) => ({ ...prev, cumulativeAttendance: attendanceResponse.data.cumulativePercentage }));
+        }
+      } catch (err) {
+        toast.error('Failed to fetch student details');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStudent();
+  }, [studentId]);
 
   if (loading) {
     return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#f8fafc' }}><Spin size="large" /></div>;
