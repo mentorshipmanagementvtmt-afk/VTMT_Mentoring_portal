@@ -148,6 +148,7 @@ function AttendanceLogPage() {
               rowKey="_id" 
               loading={loading}
               pagination={false}
+              scroll={{ x: 500 }}
               locale={{ emptyText: 'No students assigned to you.' }}
             />
           </Form>

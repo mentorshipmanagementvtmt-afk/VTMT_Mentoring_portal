@@ -196,6 +196,7 @@ function AttendanceMonitorPage() {
                     rowKey="mentorId"
                     loading={loading}
                     pagination={{ pageSize: 15 }}
+                    scroll={{ x: 900 }}
                     locale={{ emptyText: 'No faculty records found.' }}
                   />
                 )
@@ -210,6 +211,7 @@ function AttendanceMonitorPage() {
                     rowKey="studentId"
                     loading={loading}
                     pagination={{ pageSize: 15 }}
+                    scroll={{ x: 800 }}
                     locale={{ emptyText: 'No students are currently below 75% attendance.' }}
                   />
                 )

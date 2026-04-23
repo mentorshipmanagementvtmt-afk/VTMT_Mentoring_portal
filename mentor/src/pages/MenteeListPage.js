@@ -171,7 +171,7 @@ function MenteeListPage() {
       title: 'Actions',
       key: 'actions',
       render: (text, record) => (
-        <Space>
+        <Space wrap size={4}>
           {lowAttendanceByStudent[record._id] && (
             <Button
               size="small"
@@ -276,6 +276,7 @@ function MenteeListPage() {
             rowKey="_id" 
             loading={loading}
             pagination={{ pageSize: 15, showSizeChanger: false }}
+            scroll={{ x: 1000 }}
             locale={{ emptyText: 'No students assigned to you match these filters.' }}
           />
         </Card>

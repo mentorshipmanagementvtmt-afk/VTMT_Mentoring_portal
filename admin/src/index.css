@@ -1,5 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap');
 
+/* ── Global mobile overflow guard ────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { overflow-x: hidden; width: 100%; }
+
 :root {
   --app-bg: #fbf8fa;
   --surface: #ffffff;
@@ -192,11 +196,12 @@ code { font-family: source-code-pro, Menlo, Monaco, Consolas, monospace; }
   align-items: center;
   justify-content: center;
   width: min(38vw, 470px);
-  min-width: 290px;
+  min-width: 0;
   height: 68px;
   overflow: hidden;
   padding: 0;
   text-decoration: none;
+  flex-shrink: 1;
 }
 
 .admin-topbar-brand-wordmark {
@@ -312,6 +317,7 @@ code { font-family: source-code-pro, Menlo, Monaco, Consolas, monospace; }
 
 .admin-content {
   padding: 28px;
+  overflow-x: hidden;
 }
 
 .admin-content-inner {
@@ -364,10 +370,13 @@ code { font-family: source-code-pro, Menlo, Monaco, Consolas, monospace; }
   border: 1px solid rgba(197, 198, 205, 0.72);
   border-radius: 22px;
   box-shadow: 0 18px 40px rgba(9, 20, 38, 0.06);
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .surface-panel .ant-card-body {
   padding: 24px;
+  overflow-x: auto;
 }
 
 .metric-grid {
@@ -434,7 +443,7 @@ code { font-family: source-code-pro, Menlo, Monaco, Consolas, monospace; }
 
 .split-dashboard {
   display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(320px, 1fr);
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
   gap: 18px;
 }
 
@@ -503,7 +512,8 @@ code { font-family: source-code-pro, Menlo, Monaco, Consolas, monospace; }
 }
 
 .table-toolbar .ant-input-affix-wrapper {
-  min-width: 280px;
+  min-width: 200px;
+  max-width: 100%;
 }
 
 .avatar-cell {
@@ -533,7 +543,7 @@ code { font-family: source-code-pro, Menlo, Monaco, Consolas, monospace; }
 
 .profile-details-grid {
   display: grid;
-  grid-template-columns: minmax(280px, 0.95fr) minmax(0, 1.35fr);
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.35fr);
   gap: 18px;
   align-items: start;
 }
@@ -614,7 +624,7 @@ code { font-family: source-code-pro, Menlo, Monaco, Consolas, monospace; }
 
 .leaderboard-layout {
   display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
   gap: 18px;
 }
 
@@ -693,18 +703,19 @@ code { font-family: source-code-pro, Menlo, Monaco, Consolas, monospace; }
 @media (max-width: 767px) {
   .admin-topbar,
   .admin-content {
-    padding-inline: 18px;
+    padding-inline: 14px;
   }
 
   .admin-topbar {
     grid-template-columns: auto auto;
-    gap: 12px;
+    gap: 10px;
+    padding-block: 10px;
   }
 
   .admin-topbar-brand {
-    width: min(50vw, 280px);
-    min-width: 160px;
-    height: 46px;
+    width: min(48vw, 240px);
+    min-width: 0;
+    height: 42px;
     padding: 0;
   }
 
@@ -718,21 +729,22 @@ code { font-family: source-code-pro, Menlo, Monaco, Consolas, monospace; }
   }
 
   .admin-topbar-actions {
-    gap: 10px;
+    gap: 8px;
   }
 
   .admin-topbar-utility {
-    gap: 6px;
+    gap: 4px;
   }
 
   .admin-icon-button {
-    width: 36px !important;
-    min-width: 36px !important;
-    height: 36px !important;
+    width: 38px !important;
+    min-width: 38px !important;
+    height: 38px !important;
   }
 
   .admin-topbar-user {
-    padding-left: 10px;
+    padding-left: 8px;
+    border-left: none;
   }
 
   .metric-grid,
@@ -746,6 +758,8 @@ code { font-family: source-code-pro, Menlo, Monaco, Consolas, monospace; }
     grid-template-columns: 1fr;
   }
 
+  .profile-hero { text-align: center; }
+
   .timeline-date {
     text-align: left;
     padding-top: 0;
@@ -757,6 +771,80 @@ code { font-family: source-code-pro, Menlo, Monaco, Consolas, monospace; }
 
   .table-toolbar .ant-input-affix-wrapper {
     min-width: 100%;
+  }
+
+  .admin-page-title {
+    font-size: clamp(1.4rem, 5vw, 2rem);
+  }
+
+  .admin-page-header {
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .admin-actions {
+    width: 100%;
+  }
+
+  .admin-actions .ant-btn {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .surface-panel {
+    border-radius: 14px;
+  }
+
+  .surface-panel .ant-card-body {
+    padding: 16px;
+  }
+
+  .metric-value {
+    font-size: 1.5rem;
+  }
+
+  .metric-card::after {
+    width: 60px;
+    height: 60px;
+  }
+
+  .chip-group {
+    gap: 6px;
+  }
+
+  .reference-chip {
+    font-size: 0.7rem;
+    padding: 5px 8px;
+  }
+
+  .profile-details-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Table panels: ensure horizontal scroll instead of overflow */
+  .table-panel .ant-card-body,
+  .table-panel .ant-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .page-filters {
+    flex-direction: column;
+  }
+
+  .page-filters .ant-select,
+  .page-filters .ant-input-affix-wrapper {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .table-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .table-toolbar .admin-actions {
+    justify-content: stretch;
   }
 }
 
@@ -886,6 +974,7 @@ code { font-family: source-code-pro, Menlo, Monaco, Consolas, monospace; }
   font-size: 12px; font-weight: 600; color: #475569; text-transform: uppercase; margin: 0 0 10px 0;
 }
 .form-group-grid { display: grid; gap: 10px; grid-template-columns: 1fr 1fr 1fr; }
+@media (max-width: 600px) { .form-group-grid { grid-template-columns: 1fr; } }
 
 /* Buttons */
 .btn, .form-btn {
@@ -924,7 +1013,7 @@ code { font-family: source-code-pro, Menlo, Monaco, Consolas, monospace; }
 .logout:hover { background: #f8fafc; border-color: #cbd5e1; }
 
 /* Layout Grids */
-.main, .mlp .container, .mdp .container, .prp-wrap .container { max-width: 1200px; margin: 0 auto; padding: 20px; box-sizing: border-box; }
+.main, .mlp .container, .mdp .container, .prp-wrap .container { max-width: 1200px; margin: 0 auto; padding: 20px; box-sizing: border-box; overflow-x: hidden; }
 .grid, .mlp .grid, .mdp .grid, .prp-wrap .list { display: grid; gap: 16px; animation: fadeIn .45s ease-out; }
 
 @media (min-width: 900px) { .grid { grid-template-columns: 1fr; } }

@@ -168,6 +168,7 @@ export default function ManageStudentsPage() {
           rowKey="_id"
           loading={loading}
           pagination={{ pageSize: 10, showSizeChanger: false }}
+          scroll={{ x: 700 }}
         />
       </Card>
     </div>

@@ -150,6 +150,7 @@ function HodDetailsPage() {
             columns={mentorColumns}
             rowKey="_id"
             pagination={{ pageSize: 10, showSizeChanger: false }}
+            scroll={{ x: 600 }}
           />
         )}
       </Card>

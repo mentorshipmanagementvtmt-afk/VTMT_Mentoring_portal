@@ -115,35 +115,35 @@ function HodDashboard() {
       )}
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, paddingBottom: 32, borderBottom: '1px solid #e2e8f0', marginBottom: 32 }}>
-        <div style={{ flex: '1 1 180px', minWidth: 160 }}>
+        <div style={{ flex: '1 1 140px', minWidth: 120 }}>
           <Link to={"/departments/"+user.department} style={{ display: 'block' }}>
             <Button block type="primary" style={{ background: '#0ea5e9', borderColor: '#0ea5e9', borderRadius: 8, height: 44, fontWeight: 500 }}>
               Manage Faculties
             </Button>
           </Link>
         </div>
-        <div style={{ flex: '1 1 180px', minWidth: 160 }}>
+        <div style={{ flex: '1 1 140px', minWidth: 120 }}>
           <Link to="/mentors/create" style={{ display: 'block' }}>
             <Button block type="primary" style={{ background: '#10b981', borderColor: '#10b981', borderRadius: 8, height: 44, fontWeight: 500 }}>
               Add New Faculty
             </Button>
           </Link>
         </div>
-        <div style={{ flex: '1 1 180px', minWidth: 160 }}>
+        <div style={{ flex: '1 1 140px', minWidth: 120 }}>
           <Link to="/students/create" style={{ display: 'block' }}>
             <Button block type="primary" style={{ background: '#8b5cf6', borderColor: '#8b5cf6', borderRadius: 8, height: 44, fontWeight: 500 }}>
               Add New Student
             </Button>
           </Link>
         </div>
-        <div style={{ flex: '1 1 180px', minWidth: 160 }}>
+        <div style={{ flex: '1 1 140px', minWidth: 120 }}>
           <Link to="/students" style={{ display: 'block' }}>
             <Button block type="primary" style={{ background: '#f59e0b', borderColor: '#f59e0b', borderRadius: 8, height: 44, fontWeight: 500 }}>
                View Students
             </Button>
           </Link>
         </div>
-        <div style={{ flex: '1 1 180px', minWidth: 160 }}>
+        <div style={{ flex: '1 1 140px', minWidth: 120 }}>
           <Link to="/mentee-allocation" style={{ display: 'block' }}>
             <Button block type="primary" style={{ background: '#6366f1', borderColor: '#6366f1', borderRadius: 8, height: 44, fontWeight: 500 }}>
                Mentee Allocation
@@ -167,6 +167,7 @@ function HodDashboard() {
               dataSource={data} 
               rowKey="_id" 
               pagination={false}
+              scroll={{ x: 600 }}
               size="middle"
               locale={{ emptyText: 'No student activities have been logged for this department yet.' }}
             />

@@ -241,7 +241,7 @@ export default function DepartmentDetailsPage() {
         </Card>
 
         <div className="dashboard-side-stack">
-          <div className="metric-grid" style={{ gridTemplateColumns: 'repeat(3, minmax(0, 1fr))' }}>
+          <div className="metric-grid">
             <Card className="surface-panel metric-card" variant="borderless">
               <div className="metric-label">Students</div>
               <div className="metric-value">{summary.studentCount || 0}</div>
@@ -259,7 +259,7 @@ export default function DepartmentDetailsPage() {
             </Card>
           </div>
 
-          <div className="metric-grid" style={{ gridTemplateColumns: 'repeat(3, minmax(0, 1fr))' }}>
+          <div className="metric-grid">
             <Card className="surface-panel metric-card" variant="borderless">
               <div className="metric-label">Assessment Avg</div>
               <div className="metric-value">{summary.averageAssessmentScore || 0}</div>
@@ -290,6 +290,7 @@ export default function DepartmentDetailsPage() {
           rowKey="mentorId"
           loading={loading}
           pagination={{ pageSize: 8 }}
+          scroll={{ x: 800 }}
           locale={{ emptyText: 'No mentor activity found for this department.' }}
         />
       </Card>
@@ -306,6 +307,7 @@ export default function DepartmentDetailsPage() {
           rowKey="studentId"
           loading={loading}
           pagination={{ pageSize: 10 }}
+          scroll={{ x: 800 }}
           locale={{ emptyText: 'No student performance data found for this department.' }}
         />
       </Card>
@@ -319,7 +321,7 @@ export default function DepartmentDetailsPage() {
         {mentors.length === 0 ? (
           <Empty description="No faculty members found in this department." />
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 18 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 18 }}>
             {mentors.map((mentor) => {
               const mentorStats = mentorActivity.find((item) => String(item.mentorId) === String(mentor._id));
               return (

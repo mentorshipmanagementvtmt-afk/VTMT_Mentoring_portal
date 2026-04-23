@@ -140,6 +140,7 @@ function ManageStudentsPage() {
             rowKey="_id" 
             loading={loading}
             pagination={{ pageSize: 15, showSizeChanger: false }}
+            scroll={{ x: 700 }}
             locale={{ emptyText: 'No students found matching filters in your department.' }}
           />
         </Card>

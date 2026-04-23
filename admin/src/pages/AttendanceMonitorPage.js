@@ -278,7 +278,7 @@ export default function AttendanceMonitorPage() {
         </div>
       </div>
 
-      <div className="metric-grid" style={{ marginBottom: 18, gridTemplateColumns: 'repeat(3, minmax(0, 1fr))' }}>
+      <div className="metric-grid" style={{ marginBottom: 18 }}>
         {summaryCards.map(card => (
           <Card key={card.label} className="surface-panel metric-card" variant="borderless">
             <div style={{ position: 'relative', zIndex: 1 }}>
@@ -317,6 +317,7 @@ export default function AttendanceMonitorPage() {
                     rowKey="mentorId"
                     loading={loading && filteredFaculty.length > 0}
                     pagination={{ pageSize: 10 }}
+                    scroll={{ x: 900 }}
                     locale={{ emptyText: 'No records found.' }}
                   />
                 </>
@@ -332,6 +333,7 @@ export default function AttendanceMonitorPage() {
                   rowKey="mentorId"
                   loading={loading && filteredFaculty.length > 0}
                   pagination={{ pageSize: 10 }}
+                  scroll={{ x: 600 }}
                   locale={{ emptyText: 'No records found.' }}
                 />
               )
@@ -346,6 +348,7 @@ export default function AttendanceMonitorPage() {
                   rowKey="studentId"
                   loading={loading && filteredStudents.length > 0}
                   pagination={{ pageSize: 10 }}
+                  scroll={{ x: 800 }}
                   locale={{ emptyText: 'No records found.' }}
                 />
               )

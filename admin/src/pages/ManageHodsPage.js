@@ -110,7 +110,7 @@ export default function ManageHodsPage() {
           <Empty description="No HOD profiles found yet." />
         </Card>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 18 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 18 }}>
           {hods.map(hod => (
             <Card key={hod._id} className="surface-panel" variant="borderless">
               <div style={{ display: 'flex', gap: 14 }}>

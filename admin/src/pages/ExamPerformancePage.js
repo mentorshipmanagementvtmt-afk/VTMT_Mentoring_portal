@@ -70,6 +70,7 @@ function ExamPerformancePage() {
             columns={columns}
             dataSource={payload?.records || []}
             pagination={false}
+            scroll={{ x: 600 }}
             locale={{ emptyText: 'No exam records found for this student.' }}
           />
         </Card>

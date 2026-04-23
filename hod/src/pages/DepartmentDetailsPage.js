@@ -168,7 +168,7 @@ function DepartmentDetailsPage() {
                   style={{ borderRadius: 16, borderColor: '#e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', background: '#ffffff', overflow: 'hidden' }}
                   styles={{ body: { padding: 0 } }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', padding: '24px 32px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', padding: '24px 32px', flexWrap: 'wrap', gap: 16 }}>
                     {hod.profileImage?.url ? (
                       <img src={hod.profileImage.url} alt="HOD Profile" style={{ width: 100, height: 100, borderRadius: '50%', objectFit: 'cover', border: '4px solid #f1f5f9' }} />
                     ) : (
@@ -176,7 +176,7 @@ function DepartmentDetailsPage() {
                         {hod.name.charAt(0)}
                       </div>
                     )}
-                    <div style={{ marginLeft: 24 }}>
+                    <div style={{ minWidth: 0 }}>
                       <Title level={3} style={{ margin: '0 0 4px 0', color: '#0f172a' }}>{hod.name}</Title>
                       <Text type="secondary" style={{ display: 'block', fontSize: 16 }}>{hod.email}</Text>
                       <div style={{ marginTop: 8 }}>
@@ -204,6 +204,7 @@ function DepartmentDetailsPage() {
                dataSource={leaderboard} 
                rowKey="_id" 
                pagination={false}
+               scroll={{ x: 600 }}
                size="middle"
                locale={{ emptyText: 'No student activities have been logged to rank mentors.' }}
              />

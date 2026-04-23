@@ -140,7 +140,7 @@ export default function ManageDepartmentsPage() {
         </div>
       </div>
 
-      <div className="metric-grid" style={{ marginBottom: 18, gridTemplateColumns: 'repeat(4, minmax(0, 1fr))' }}>
+      <div className="metric-grid" style={{ marginBottom: 18 }}>
         <Card className="surface-panel metric-card" variant="borderless">
           <div className="metric-label">Departments</div>
           <div className="metric-value">{departments.length}</div>
@@ -177,6 +177,7 @@ export default function ManageDepartmentsPage() {
             rowKey={(record) => record._id || record.department}
             loading={loading}
             pagination={false}
+            scroll={{ x: 700 }}
             locale={{ emptyText: 'No department analytics available yet.' }}
           />
         </Card>
@@ -218,7 +219,7 @@ export default function ManageDepartmentsPage() {
         {!loading && departments.length === 0 ? (
           <Empty description="No departments found yet." />
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 18 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 18 }}>
             {rankedDepartments.map((department) => (
               <Link
                 key={department._id || department.department}

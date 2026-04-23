@@ -214,6 +214,7 @@ function ExamMarksPage() {
             columns={columns}
             dataSource={rows}
             pagination={false}
+            scroll={{ x: 800 }}
             locale={{ emptyText: 'No exam types available.' }}
           />
         </Card>

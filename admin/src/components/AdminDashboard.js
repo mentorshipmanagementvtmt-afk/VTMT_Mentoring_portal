@@ -229,7 +229,7 @@ export default function AdminDashboard() {
           </Card>
 
           <Card className="surface-panel" title={<span style={{ fontFamily: 'Manrope, sans-serif', fontWeight: 800 }}>Quick Actions</span>}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 12 }}>
               {quickActions.map(action => (
                 <Link key={action.label} to={action.to} className="activity-card-link">
                   <Card className="activity-card" style={{ borderRadius: 18, minHeight: 128 }}>
